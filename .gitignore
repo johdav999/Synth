@@ -1,0 +1,9 @@
+build/
+.vs/
+out/
+*.user
+*.suo
+*.ninja
+*.log
+DerivedData/
+ipch/
