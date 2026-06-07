@@ -3,7 +3,7 @@
 namespace
 {
 constexpr int editorWidth = 1280;
-constexpr int editorHeight = 820;
+constexpr int editorHeight = 720;
 constexpr int woodWidth = 38;
 
 const auto panel = juce::Colour(0xff151512);
@@ -511,12 +511,7 @@ void SynthAudioProcessorEditor::paint(juce::Graphics& g)
     drawSection(g, { 492, 424, 300, 170 }, "PERFORMANCE");
     drawSection(g, { 804, 424, 240, 170 }, "OUTPUT / FX");
     drawSection(g, { 1056, 424, 184, 170 }, "VOICES");
-    drawSection(g, { 50, 606, 150, 106 }, "WHEELS");
-    drawSection(g, { 212, 606, 360, 106 }, "PERFORMANCE");
-    drawSection(g, { 584, 606, 210, 106 }, "ENVELOPE");
-    drawSection(g, { 806, 606, 230, 106 }, "VOICES");
-    drawSection(g, { 1048, 606, 192, 106 }, "UNISON");
-    drawSection(g, { 50, 718, 1190, 86 }, "PIANO ROLL");
+    drawSection(g, { 50, 606, 1190, 106 }, "PIANO ROLL");
 
     g.setColour(outline.withAlpha(0.6f));
     g.drawLine(72.0f, 198.0f, 458.0f, 198.0f, 1.0f);
@@ -584,47 +579,6 @@ void SynthAudioProcessorEditor::paint(juce::Graphics& g)
     auto envGraph = juce::Rectangle<int>(615, 492, 144, 70);
     drawEnvGraph(envGraph);
 
-    auto drawWheel = [&g](juce::Rectangle<int> wheel, const juce::String& name)
-    {
-        g.setColour(juce::Colour(0xff060606));
-        g.fillRoundedRectangle(wheel.toFloat(), 4.0f);
-        g.setGradientFill(juce::ColourGradient(juce::Colour(0xff353027), static_cast<float>(wheel.getX()), static_cast<float>(wheel.getY()),
-                                               juce::Colour(0xff070707), static_cast<float>(wheel.getX()), static_cast<float>(wheel.getBottom()), false));
-        g.fillRoundedRectangle(wheel.reduced(5).toFloat(), 3.0f);
-        g.setColour(outline.withAlpha(0.45f));
-        g.drawRoundedRectangle(wheel.toFloat(), 4.0f, 1.0f);
-        g.setColour(cream);
-        g.setFont(juce::FontOptions(12.0f, juce::Font::bold));
-        g.drawText(name, wheel.withY(wheel.getY() - 20).withHeight(16), juce::Justification::centred);
-    };
-    drawWheel({ 78, 632, 34, 68 }, "PITCH");
-    drawWheel({ 138, 632, 34, 68 }, "MOD");
-
-    drawToggle(268, 656, true, "VEL>AMP");
-    drawToggle(352, 656, true, "VEL>FILTER");
-    drawToggle(436, 656, false, "AFTERTOUCH");
-    drawToggle(520, 656, true, "PORTAMENTO");
-    drawEnvGraph({ 610, 632, 150, 62 });
-    drawHardwareButton({ 830, 650, 40, 40 }, "1");
-    drawHardwareButton({ 874, 650, 40, 40 }, "2");
-    drawHardwareButton({ 918, 650, 40, 40 }, "4");
-    drawHardwareButton({ 962, 650, 40, 40 }, "8");
-
-    juce::Slider fauxUnisonA;
-    juce::Slider fauxUnisonB;
-    juce::Slider fauxUnisonC;
-    fauxUnisonA.setName("Unison");
-    fauxUnisonB.setName("Detune");
-    fauxUnisonC.setName("Spread");
-    retroLookAndFeel->drawRotarySlider(g, 1062, 640, 58, 58, 0.55f, juce::MathConstants<float>::pi * 1.2f, juce::MathConstants<float>::pi * 2.8f, fauxUnisonA);
-    retroLookAndFeel->drawRotarySlider(g, 1118, 640, 58, 58, 0.38f, juce::MathConstants<float>::pi * 1.2f, juce::MathConstants<float>::pi * 2.8f, fauxUnisonB);
-    retroLookAndFeel->drawRotarySlider(g, 1174, 640, 58, 58, 0.68f, juce::MathConstants<float>::pi * 1.2f, juce::MathConstants<float>::pi * 2.8f, fauxUnisonC);
-    g.setColour(cream);
-    g.setFont(juce::FontOptions(10.0f, juce::Font::bold));
-    g.drawText("VOICES", 1064, 626, 54, 14, juce::Justification::centred);
-    g.drawText("DETUNE", 1120, 626, 54, 14, juce::Justification::centred);
-    g.drawText("AMOUNT", 1174, 626, 58, 14, juce::Justification::centred);
-
     drawHardwareButton({ 1080, 504, 34, 40 }, "1");
     drawHardwareButton({ 1118, 504, 34, 40 }, "2");
     drawHardwareButton({ 1156, 504, 34, 40 }, "4");
@@ -638,11 +592,11 @@ void SynthAudioProcessorEditor::paint(juce::Graphics& g)
     drawLed(g, { 67.0f, 456.0f });
     drawLed(g, { 586.0f, 456.0f });
     drawLed(g, { 1212.0f, 456.0f });
-    drawLed(g, { 67.0f, 744.0f });
+    drawLed(g, { 67.0f, 632.0f });
 
     g.setColour(mutedCream);
     g.setFont(juce::FontOptions(11.0f, juce::Font::bold));
-    g.drawText("MOUSE PLAYABLE", 92, 735, 160, 16, juce::Justification::centredLeft);
+    g.drawText("MOUSE PLAYABLE", 92, 623, 160, 16, juce::Justification::centredLeft);
 }
 
 void SynthAudioProcessorEditor::resized()
@@ -710,5 +664,5 @@ void SynthAudioProcessorEditor::resized()
     place(reverbMix, reverbMixLabel, 932, 462, 76, 90);
     place(outputGain, outputGainLabel, 970, 462, 78, 96);
 
-    pianoKeyboard.setBounds(72, 752, 1146, 42);
+    pianoKeyboard.setBounds(72, 640, 1146, 58);
 }
