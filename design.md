@@ -180,6 +180,40 @@ Suggested sections:
 
 ---
 
+## GUI Visual Style
+
+The GUI should use a retro analog hardware-inspired style.
+
+The visual direction should feel warm, tactile, and premium, with clear inspiration from 1970s analog synthesizer panels while remaining legally distinct from any specific real instrument.
+
+Preferred visual elements:
+
+* Dark charcoal or near-black metal faceplate
+* Warm walnut or dark wood side panels
+* Large black knurled knobs with light indicator lines
+* Cream or off-white panel text
+* Amber LEDs or small warm status lights
+* Toggle switches for binary performance options
+* Slider-style controls for envelope stages where useful
+* Subtle panel dividers and grouped hardware sections
+* Slightly worn or satin material finish, not glossy plastic
+
+The large filter cutoff knob should act as the main visual anchor.
+
+The interface should feel like a real instrument photographed or rendered from the front, not like a flat generic software skin.
+
+Avoid:
+
+* Logos or brand marks referencing real synthesizer companies
+* Exact panel layouts from existing hardware
+* Decorative gradients that make the UI feel modern-web rather than hardware-like
+* Overly skeuomorphic dirt, scratches, or fake aging that harms readability
+* Hidden controls that undermine the single-page workflow
+
+Use the generated retro analog GUI concept image as the style reference for future GUI tasks: wood side cheeks, dark metal panel, amber highlights, large tactile controls, and clearly grouped sections.
+
+---
+
 # Oscillator Section
 
 Per oscillator:
