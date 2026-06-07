@@ -252,6 +252,8 @@ SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
     pianoKeyboard.setScrollButtonsVisible(true);
     pianoKeyboard.setVelocity(0.85f, true);
     pianoKeyboard.setMidiChannel(1);
+    pianoKeyboard.setWantsKeyboardFocus(true);
+    pianoKeyboard.setMouseClickGrabsKeyboardFocus(true);
     pianoKeyboard.setColour(juce::MidiKeyboardComponent::whiteNoteColourId, juce::Colour(0xffe7d8bd));
     pianoKeyboard.setColour(juce::MidiKeyboardComponent::blackNoteColourId, juce::Colour(0xff080806));
     pianoKeyboard.setColour(juce::MidiKeyboardComponent::keySeparatorLineColourId, juce::Colour(0xff2e2518));
@@ -304,6 +306,7 @@ SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
 
     filterCutoff.setName("Cutoff");
     filterCutoff.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 84, 18);
+    refocusPianoKeyboard();
 }
 
 SynthAudioProcessorEditor::~SynthAudioProcessorEditor()
@@ -317,6 +320,10 @@ void SynthAudioProcessorEditor::addKnob(juce::Slider& slider, juce::Label& label
     slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 66, 18);
     slider.setNumDecimalPlacesToDisplay(2);
     slider.setPopupDisplayEnabled(true, false, this);
+    slider.setWantsKeyboardFocus(false);
+    slider.setMouseClickGrabsKeyboardFocus(false);
+    slider.onDragEnd = [this] { refocusPianoKeyboard(); };
+    slider.onValueChange = [this] { refocusPianoKeyboard(); };
     slider.setColour(juce::Slider::textBoxTextColourId, cream);
     slider.setColour(juce::Slider::textBoxBackgroundColourId, textBox);
     slider.setColour(juce::Slider::textBoxOutlineColourId, outline.withAlpha(0.55f));
@@ -334,6 +341,10 @@ void SynthAudioProcessorEditor::addEnvelopeSlider(juce::Slider& slider, juce::La
     slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 18);
     slider.setNumDecimalPlacesToDisplay(2);
     slider.setPopupDisplayEnabled(true, false, this);
+    slider.setWantsKeyboardFocus(false);
+    slider.setMouseClickGrabsKeyboardFocus(false);
+    slider.onDragEnd = [this] { refocusPianoKeyboard(); };
+    slider.onValueChange = [this] { refocusPianoKeyboard(); };
     slider.setColour(juce::Slider::textBoxTextColourId, cream);
     slider.setColour(juce::Slider::textBoxBackgroundColourId, textBox);
     slider.setColour(juce::Slider::textBoxOutlineColourId, outline.withAlpha(0.55f));
@@ -350,8 +361,17 @@ void SynthAudioProcessorEditor::addCombo(juce::ComboBox& combo, juce::Label& lab
     label.setText(text, juce::dontSendNotification);
     label.setJustificationType(juce::Justification::centredLeft);
     label.setColour(juce::Label::textColourId, cream);
+    combo.setWantsKeyboardFocus(false);
+    combo.setMouseClickGrabsKeyboardFocus(false);
+    combo.onChange = [this] { refocusPianoKeyboard(); };
     addAndMakeVisible(combo);
     addAndMakeVisible(label);
+}
+
+void SynthAudioProcessorEditor::refocusPianoKeyboard()
+{
+    if (pianoKeyboard.isShowing())
+        pianoKeyboard.grabKeyboardFocus();
 }
 
 void SynthAudioProcessorEditor::drawSection(juce::Graphics& g, juce::Rectangle<int> bounds, const juce::String& title)

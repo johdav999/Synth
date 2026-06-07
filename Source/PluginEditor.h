@@ -18,6 +18,7 @@ private:
     void addKnob(juce::Slider& slider, juce::Label& label, const juce::String& text);
     void addEnvelopeSlider(juce::Slider& slider, juce::Label& label, const juce::String& text);
     void addCombo(juce::ComboBox& combo, juce::Label& label, const juce::String& text);
+    void refocusPianoKeyboard();
     void drawSection(juce::Graphics& g, juce::Rectangle<int> bounds, const juce::String& title);
     void drawScrew(juce::Graphics& g, int x, int y);
 
