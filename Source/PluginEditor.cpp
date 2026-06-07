@@ -393,6 +393,14 @@ void SynthAudioProcessorEditor::addKnob(juce::Slider& slider, juce::Label& label
     slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 66, 18);
     slider.setNumDecimalPlacesToDisplay(1);
+    slider.textFromValueFunction = [](double value)
+    {
+        return juce::String(value, 1);
+    };
+    slider.valueFromTextFunction = [](const juce::String& textValue)
+    {
+        return textValue.getDoubleValue();
+    };
     slider.setPopupDisplayEnabled(true, false, this);
     slider.setWantsKeyboardFocus(false);
     slider.setMouseClickGrabsKeyboardFocus(false);
@@ -414,6 +422,14 @@ void SynthAudioProcessorEditor::addEnvelopeSlider(juce::Slider& slider, juce::La
     slider.setSliderStyle(juce::Slider::LinearVertical);
     slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 18);
     slider.setNumDecimalPlacesToDisplay(1);
+    slider.textFromValueFunction = [](double value)
+    {
+        return juce::String(value, 1);
+    };
+    slider.valueFromTextFunction = [](const juce::String& textValue)
+    {
+        return textValue.getDoubleValue();
+    };
     slider.setPopupDisplayEnabled(true, false, this);
     slider.setWantsKeyboardFocus(false);
     slider.setMouseClickGrabsKeyboardFocus(false);
