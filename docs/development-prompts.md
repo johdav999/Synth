@@ -21,3 +21,13 @@ Run these prompts in order. After each prompt, build the VST3 and run the smoke 
 ## GUI Follow-up
 
 Use [GUI Implementation Prompt](gui-implementation-prompt.md) to replace the current MVP editor with the retro hardware-style GUI described in `design.md`.
+
+## Next 5 Improvement Prompts
+
+Run these prompts after the retro GUI pass. Keep each change inside the existing JUCE `SynthAudioProcessor` / `SynthAudioProcessorEditor` architecture described in `docs/architecture.md`, and preserve the single-page hardware workflow described in `design.md`.
+
+1. Implement functional preset controls. Replace decorative top-bar preset actions with real previous/next/load/save buttons, keep the displayed program name in sync with the processor, save current program metadata in plugin state, and support user preset XML files that store all APVTS parameter values.
+2. Add per-oscillator waveform and octave controls. Introduce automatable parameters for oscillator 1/2/3 waveform and octave, migrate DSP rendering away from the shared waveform control, expose the controls in the oscillator section, and preserve compatibility with existing state where possible.
+3. Polish the GUI layout for readable hardware workflow. Reduce label overlap, make the top preset display dynamic, align oscillator rows, keep the filter as the visual anchor, and remove or convert decorative controls that conflict with active controls.
+4. Expose the two-slot modulation matrix. Add compact source/destination/amount controls for Mod 1 and Mod 2, wire them to the existing APVTS parameters, keep the panel immediate and hardware-like, and verify modulation still affects rendered audio.
+5. Improve analog sound quality. Replace the most alias-prone oscillator edges with a lightweight PolyBLEP correction, keep drift and random phase behavior, add conservative output safety gain/clip protection, and expand smoke tests to catch silence, non-finite samples, and basic high-note rendering.

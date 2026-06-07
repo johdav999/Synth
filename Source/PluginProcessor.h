@@ -36,6 +36,11 @@ public:
 
     juce::AudioProcessorValueTreeState& getParameters();
     juce::MidiKeyboardState& getKeyboardState();
+    juce::String getCurrentProgramDisplayName() const;
+    void selectPreviousProgram();
+    void selectNextProgram();
+    bool saveUserPreset();
+    bool loadUserPreset();
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
 private:
@@ -70,7 +75,8 @@ private:
 
         void updateParameters();
         float modulationSource(int source, float lfo, float velocity, float aftertouch, float envelope) const;
-        static float oscillatorSample(int waveform, double phase, double pulseWidth);
+        static float polyBlep(double phase, double phaseIncrement);
+        static float oscillatorSample(int waveform, double phase, double pulseWidth, double phaseIncrement);
 
         juce::AudioProcessorValueTreeState& parameters;
         juce::ADSR ampEnvelope;
@@ -97,6 +103,7 @@ private:
     void configureVoiceCount();
     void applyEffects(juce::AudioBuffer<float>& buffer);
     void loadProgram(int index);
+    juce::File getUserPresetFile() const;
     void parameterChanged(const juce::String& parameterID, float newValue) override;
     void debugLog(const juce::String& message);
 
@@ -111,6 +118,7 @@ private:
     int delayWritePosition = 0;
     int configuredVoiceCount = 0;
     int currentProgram = 0;
+    juce::String currentProgramName;
     double preparedSampleRate = 0.0;
     int preparedSamplesPerBlock = 0;
     int preparedOutputChannels = 0;

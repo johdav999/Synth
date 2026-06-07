@@ -208,10 +208,19 @@ SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
       processor(p),
       retroLookAndFeel(std::make_unique<RetroLookAndFeel>()),
       pianoKeyboard(processor.getKeyboardState(), juce::MidiKeyboardComponent::horizontalKeyboard),
-      waveformAttachment(processor.getParameters(), "Waveform", waveform),
+      waveformAttachment(processor.getParameters(), "Osc1Waveform", waveform),
+      osc2WaveformAttachment(processor.getParameters(), "Osc2Waveform", osc2Waveform),
+      osc3WaveformAttachment(processor.getParameters(), "Osc3Waveform", osc3Waveform),
+      osc1OctaveAttachment(processor.getParameters(), "Osc1Octave", osc1Octave),
+      osc2OctaveAttachment(processor.getParameters(), "Osc2Octave", osc2Octave),
+      osc3OctaveAttachment(processor.getParameters(), "Osc3Octave", osc3Octave),
       voiceModeAttachment(processor.getParameters(), "VoiceMode", voiceMode),
       lfoDestinationAttachment(processor.getParameters(), "LfoDestination", lfoDestination),
       dualFilterModeAttachment(processor.getParameters(), "DualFilterMode", dualFilterMode),
+      mod1SourceAttachment(processor.getParameters(), "Mod1Source", mod1Source),
+      mod1DestinationAttachment(processor.getParameters(), "Mod1Destination", mod1Destination),
+      mod2SourceAttachment(processor.getParameters(), "Mod2Source", mod2Source),
+      mod2DestinationAttachment(processor.getParameters(), "Mod2Destination", mod2Destination),
       osc1TuneAttachment(processor.getParameters(), "Osc1Tune", osc1Tune),
       osc2TuneAttachment(processor.getParameters(), "Osc2Tune", osc2Tune),
       osc3TuneAttachment(processor.getParameters(), "Osc3Tune", osc3Tune),
@@ -241,7 +250,9 @@ SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
       chorusMixAttachment(processor.getParameters(), "ChorusMix", chorusMix),
       delayMixAttachment(processor.getParameters(), "DelayMix", delayMix),
       reverbMixAttachment(processor.getParameters(), "ReverbMix", reverbMix),
-      outputGainAttachment(processor.getParameters(), "OutputGain", outputGain)
+      outputGainAttachment(processor.getParameters(), "OutputGain", outputGain),
+      mod1AmountAttachment(processor.getParameters(), "Mod1Amount", mod1Amount),
+      mod2AmountAttachment(processor.getParameters(), "Mod2Amount", mod2Amount)
 {
     setSize(editorWidth, editorHeight);
     setLookAndFeel(retroLookAndFeel.get());
@@ -263,22 +274,81 @@ SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
     pianoKeyboard.setColour(juce::MidiKeyboardComponent::shadowColourId, juce::Colour(0xcc000000));
     addAndMakeVisible(pianoKeyboard);
 
+    programDisplay.setJustificationType(juce::Justification::centredLeft);
+    programDisplay.setColour(juce::Label::textColourId, amber);
+    programDisplay.setColour(juce::Label::backgroundColourId, juce::Colours::transparentBlack);
+    addAndMakeVisible(programDisplay);
+
+    addToolbarButton(previousProgramButton, "<");
+    addToolbarButton(nextProgramButton, ">");
+    addToolbarButton(savePresetButton, "SAVE");
+    addToolbarButton(loadPresetButton, "LOAD");
+
+    previousProgramButton.onClick = [this]
+    {
+        processor.selectPreviousProgram();
+        updateProgramDisplay();
+        repaint();
+        refocusPianoKeyboard();
+    };
+
+    nextProgramButton.onClick = [this]
+    {
+        processor.selectNextProgram();
+        updateProgramDisplay();
+        repaint();
+        refocusPianoKeyboard();
+    };
+
+    savePresetButton.onClick = [this]
+    {
+        processor.saveUserPreset();
+        updateProgramDisplay();
+        refocusPianoKeyboard();
+    };
+
+    loadPresetButton.onClick = [this]
+    {
+        processor.loadUserPreset();
+        updateProgramDisplay();
+        repaint();
+        refocusPianoKeyboard();
+    };
+
     waveform.addItemList({ "Sine", "Saw", "Pulse", "Triangle" }, 1);
+    osc2Waveform.addItemList({ "Sine", "Saw", "Pulse", "Triangle" }, 1);
+    osc3Waveform.addItemList({ "Sine", "Saw", "Pulse", "Triangle" }, 1);
+    osc1Octave.addItemList({ "-2", "-1", "0", "+1", "+2" }, 1);
+    osc2Octave.addItemList({ "-2", "-1", "0", "+1", "+2" }, 1);
+    osc3Octave.addItemList({ "-2", "-1", "0", "+1", "+2" }, 1);
     voiceMode.addItemList({ "Mono", "Poly" }, 1);
     lfoDestination.addItemList({ "Off", "Pitch", "Cutoff", "PWM", "Amp" }, 1);
     dualFilterMode.addItemList({ "Off", "Serial", "Parallel" }, 1);
+    mod1Source.addItemList({ "Off", "LFO", "Velocity", "Aftertouch", "Filter Env" }, 1);
+    mod1Destination.addItemList({ "Off", "Pitch", "Cutoff", "PWM", "Amp", "Resonance" }, 1);
+    mod2Source.addItemList({ "Off", "LFO", "Velocity", "Aftertouch", "Filter Env" }, 1);
+    mod2Destination.addItemList({ "Off", "Pitch", "Cutoff", "PWM", "Amp", "Resonance" }, 1);
 
-    addCombo(waveform, waveformLabel, "Wave");
+    addCombo(waveform, waveformLabel, "Wave 1");
+    addCombo(osc2Waveform, osc2WaveformLabel, "Wave 2");
+    addCombo(osc3Waveform, osc3WaveformLabel, "Wave 3");
+    addCombo(osc1Octave, osc1OctaveLabel, "Oct 1");
+    addCombo(osc2Octave, osc2OctaveLabel, "Oct 2");
+    addCombo(osc3Octave, osc3OctaveLabel, "Oct 3");
     addCombo(voiceMode, voiceModeLabel, "Voice");
     addCombo(lfoDestination, lfoDestinationLabel, "LFO Dest");
     addCombo(dualFilterMode, dualFilterModeLabel, "Mode");
+    addCombo(mod1Source, mod1SourceLabel, "Mod 1 Src");
+    addCombo(mod1Destination, mod1DestinationLabel, "Mod 1 Dest");
+    addCombo(mod2Source, mod2SourceLabel, "Mod 2 Src");
+    addCombo(mod2Destination, mod2DestinationLabel, "Mod 2 Dest");
 
-    addKnob(osc1Tune, osc1TuneLabel, "Osc 1 Tune");
-    addKnob(osc2Tune, osc2TuneLabel, "Osc 2 Tune");
-    addKnob(osc3Tune, osc3TuneLabel, "Osc 3 Tune");
-    addKnob(osc1Level, osc1LevelLabel, "Osc 1 Level");
-    addKnob(osc2Level, osc2LevelLabel, "Osc 2 Level");
-    addKnob(osc3Level, osc3LevelLabel, "Osc 3 Level");
+    addKnob(osc1Tune, osc1TuneLabel, "Tune 1");
+    addKnob(osc2Tune, osc2TuneLabel, "Tune 2");
+    addKnob(osc3Tune, osc3TuneLabel, "Tune 3");
+    addKnob(osc1Level, osc1LevelLabel, "Level 1");
+    addKnob(osc2Level, osc2LevelLabel, "Level 2");
+    addKnob(osc3Level, osc3LevelLabel, "Level 3");
     addKnob(noiseLevel, noiseLevelLabel, "Noise");
     addKnob(pulseWidth, pulseWidthLabel, "Pulse Width");
     addKnob(mixerDrive, mixerDriveLabel, "Drive");
@@ -303,10 +373,13 @@ SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
     addKnob(delayMix, delayMixLabel, "Delay");
     addKnob(reverbMix, reverbMixLabel, "Reverb");
     addKnob(outputGain, outputGainLabel, "Output");
+    addKnob(mod1Amount, mod1AmountLabel, "Mod 1 Amt");
+    addKnob(mod2Amount, mod2AmountLabel, "Mod 2 Amt");
 
     filterCutoff.setName("Cutoff");
     filterCutoff.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 84, 18);
     filterCutoff.setNumDecimalPlacesToDisplay(1);
+    updateProgramDisplay();
     refocusPianoKeyboard();
 }
 
@@ -367,6 +440,25 @@ void SynthAudioProcessorEditor::addCombo(juce::ComboBox& combo, juce::Label& lab
     combo.onChange = [this] { refocusPianoKeyboard(); };
     addAndMakeVisible(combo);
     addAndMakeVisible(label);
+}
+
+void SynthAudioProcessorEditor::addToolbarButton(juce::TextButton& button, const juce::String& text)
+{
+    button.setButtonText(text);
+    button.setWantsKeyboardFocus(false);
+    button.setMouseClickGrabsKeyboardFocus(false);
+    button.setColour(juce::TextButton::buttonColourId, juce::Colour(0xff11110f));
+    button.setColour(juce::TextButton::buttonOnColourId, amberDim);
+    button.setColour(juce::TextButton::textColourOffId, cream);
+    button.setColour(juce::TextButton::textColourOnId, cream);
+    addAndMakeVisible(button);
+}
+
+void SynthAudioProcessorEditor::updateProgramDisplay()
+{
+    const auto index = processor.getCurrentProgram() + 1;
+    programDisplay.setText(juce::String(index).paddedLeft('0', 3) + "   " + processor.getCurrentProgramDisplayName().toUpperCase(),
+                           juce::dontSendNotification);
 }
 
 void SynthAudioProcessorEditor::refocusPianoKeyboard()
@@ -493,15 +585,15 @@ void SynthAudioProcessorEditor::paint(juce::Graphics& g)
     g.drawRoundedRectangle(presetDisplay.toFloat(), 3.0f, 1.0f);
     g.setColour(amber);
     g.setFont(juce::FontOptions(18.0f, juce::Font::bold));
-    g.drawText("001   CLASSIC LEAD", presetDisplay.reduced(14, 0), juce::Justification::centredLeft);
 
     drawHardwareButton({ top.getX() + 620, top.getY() + 8, 34, 36 }, "<");
     drawHardwareButton({ top.getX() + 657, top.getY() + 8, 34, 36 }, ">");
     drawHardwareButton({ top.getX() + 696, top.getY() + 8, 42, 36 }, "SAVE");
-    drawHardwareButton({ top.getX() + 778, top.getY() + 8, 72, 36 }, "A / B");
-    drawHardwareButton({ top.getX() + 856, top.getY() + 8, 72, 36 }, "COPY");
-    drawHardwareButton({ top.getX() + 934, top.getY() + 8, 72, 36 }, "UNDO");
-    drawHardwareButton({ top.getX() + 1012, top.getY() + 8, 72, 36 }, "REDO");
+    drawHardwareButton({ top.getX() + 742, top.getY() + 8, 42, 36 }, "LOAD");
+    drawHardwareButton({ top.getX() + 818, top.getY() + 8, 72, 36 }, "A / B");
+    drawHardwareButton({ top.getX() + 896, top.getY() + 8, 72, 36 }, "COPY");
+    drawHardwareButton({ top.getX() + 974, top.getY() + 8, 72, 36 }, "UNDO");
+    drawHardwareButton({ top.getX() + 1052, top.getY() + 8, 72, 36 }, "REDO");
     drawHardwareButton({ top.getX() + 1090, top.getY() + 8, 44, 36 }, "*");
 
     auto meter = juce::Rectangle<int>(top.getRight() - 192, top.getY() + 10, 116, 32);
@@ -553,16 +645,6 @@ void SynthAudioProcessorEditor::paint(juce::Graphics& g)
         g.setFont(juce::FontOptions(18.0f, juce::Font::bold));
         g.drawText(juce::String((y - 51) / 106), badge, juce::Justification::centred);
         drawLed(g, { 98.0f, static_cast<float>(y + 42) });
-    }
-
-    g.setColour(cream.withAlpha(0.75f));
-    g.setFont(juce::FontOptions(11.0f, juce::Font::bold));
-    for (auto y : { 165, 271, 377 })
-    {
-        g.drawText("TUNE", 128, y - 28, 70, 16, juce::Justification::centred);
-        g.drawText("WAVE", 276, y - 28, 70, 16, juce::Justification::centred);
-        g.drawText("OCTAVE", 382, y - 28, 72, 16, juce::Justification::centred);
-        g.drawText("-2        +2", 382, y + 62, 74, 16, juce::Justification::centred);
     }
 
     g.setColour(cream.withAlpha(0.9f));
@@ -624,6 +706,13 @@ void SynthAudioProcessorEditor::paint(juce::Graphics& g)
 
 void SynthAudioProcessorEditor::resized()
 {
+    auto top = juce::Rectangle<int>(woodWidth, 8, getWidth() - woodWidth * 2, 72).reduced(10, 8);
+    programDisplay.setBounds(top.getX() + 300, top.getY() + 8, 292, 36);
+    previousProgramButton.setBounds(top.getX() + 620, top.getY() + 8, 34, 36);
+    nextProgramButton.setBounds(top.getX() + 657, top.getY() + 8, 34, 36);
+    savePresetButton.setBounds(top.getX() + 696, top.getY() + 8, 42, 36);
+    loadPresetButton.setBounds(top.getX() + 742, top.getY() + 8, 42, 36);
+
     auto place = [](juce::Slider& slider, juce::Label& label, int x, int y, int w = 72, int h = 86)
     {
         label.setBounds(x - 8, y, w + 16, 18);
@@ -642,13 +731,25 @@ void SynthAudioProcessorEditor::resized()
         slider.setBounds(x - 2, y + 18, 50, 96);
     };
 
-    waveformLabel.setBounds(268, 244, 82, 18);
-    waveform.setBounds(268, 264, 118, 26);
+    waveformLabel.setBounds(222, 142, 82, 18);
+    waveform.setBounds(222, 162, 112, 24);
+    osc1OctaveLabel.setBounds(340, 142, 66, 18);
+    osc1Octave.setBounds(340, 162, 64, 24);
+
+    osc2WaveformLabel.setBounds(222, 248, 82, 18);
+    osc2Waveform.setBounds(222, 268, 112, 24);
+    osc2OctaveLabel.setBounds(340, 248, 66, 18);
+    osc2Octave.setBounds(340, 268, 64, 24);
+
+    osc3WaveformLabel.setBounds(222, 354, 82, 18);
+    osc3Waveform.setBounds(222, 374, 112, 24);
+    osc3OctaveLabel.setBounds(340, 354, 66, 18);
+    osc3Octave.setBounds(340, 374, 64, 24);
     place(osc1Tune, osc1TuneLabel, 122, 134, 86, 94);
-    place(pulseWidth, pulseWidthLabel, 268, 134, 86, 94);
-    place(analogDrift, analogDriftLabel, 386, 134, 70, 82);
+    place(pulseWidth, pulseWidthLabel, 386, 134, 70, 82);
+    place(analogDrift, analogDriftLabel, 386, 240, 70, 82);
     place(osc2Tune, osc2TuneLabel, 122, 240, 86, 94);
-    place(driftRate, driftRateLabel, 386, 240, 70, 82);
+    place(driftRate, driftRateLabel, 386, 342, 70, 82);
     place(osc3Tune, osc3TuneLabel, 122, 342, 86, 82);
 
     place(osc1Level, osc1LevelLabel, 516, 128, 76, 82);
@@ -681,7 +782,19 @@ void SynthAudioProcessorEditor::resized()
 
     voiceModeLabel.setBounds(512, 462, 78, 18);
     voiceMode.setBounds(512, 482, 118, 26);
-    place(chorusMix, chorusMixLabel, 670, 462, 76, 90);
+    place(chorusMix, chorusMixLabel, 700, 452, 68, 76);
+
+    mod1SourceLabel.setBounds(512, 516, 82, 18);
+    mod1Source.setBounds(512, 536, 86, 24);
+    mod1DestinationLabel.setBounds(604, 516, 92, 18);
+    mod1Destination.setBounds(604, 536, 92, 24);
+    place(mod1Amount, mod1AmountLabel, 710, 512, 60, 58);
+
+    mod2SourceLabel.setBounds(512, 558, 82, 18);
+    mod2Source.setBounds(512, 578, 86, 24);
+    mod2DestinationLabel.setBounds(604, 558, 92, 18);
+    mod2Destination.setBounds(604, 578, 92, 24);
+    place(mod2Amount, mod2AmountLabel, 710, 554, 60, 58);
 
     place(delayMix, delayMixLabel, 850, 462, 76, 90);
     place(reverbMix, reverbMixLabel, 932, 462, 76, 90);

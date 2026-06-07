@@ -27,6 +27,8 @@ private:
     void addKnob(juce::Slider& slider, juce::Label& label, const juce::String& text);
     void addEnvelopeSlider(juce::Slider& slider, juce::Label& label, const juce::String& text);
     void addCombo(juce::ComboBox& combo, juce::Label& label, const juce::String& text);
+    void addToolbarButton(juce::TextButton& button, const juce::String& text);
+    void updateProgramDisplay();
     void refocusPianoKeyboard();
     void drawSection(juce::Graphics& g, juce::Rectangle<int> bounds, const juce::String& title);
     void drawScrew(juce::Graphics& g, int x, int y);
@@ -34,15 +36,38 @@ private:
     SynthAudioProcessor& processor;
     std::unique_ptr<juce::LookAndFeel_V4> retroLookAndFeel;
     juce::MidiKeyboardComponent pianoKeyboard;
+    juce::TextButton previousProgramButton;
+    juce::TextButton nextProgramButton;
+    juce::TextButton savePresetButton;
+    juce::TextButton loadPresetButton;
+    juce::Label programDisplay;
 
     juce::ComboBox waveform;
+    juce::ComboBox osc2Waveform;
+    juce::ComboBox osc3Waveform;
+    juce::ComboBox osc1Octave;
+    juce::ComboBox osc2Octave;
+    juce::ComboBox osc3Octave;
     juce::ComboBox voiceMode;
     juce::ComboBox lfoDestination;
     juce::ComboBox dualFilterMode;
+    juce::ComboBox mod1Source;
+    juce::ComboBox mod1Destination;
+    juce::ComboBox mod2Source;
+    juce::ComboBox mod2Destination;
     juce::Label waveformLabel;
+    juce::Label osc2WaveformLabel;
+    juce::Label osc3WaveformLabel;
+    juce::Label osc1OctaveLabel;
+    juce::Label osc2OctaveLabel;
+    juce::Label osc3OctaveLabel;
     juce::Label voiceModeLabel;
     juce::Label lfoDestinationLabel;
     juce::Label dualFilterModeLabel;
+    juce::Label mod1SourceLabel;
+    juce::Label mod1DestinationLabel;
+    juce::Label mod2SourceLabel;
+    juce::Label mod2DestinationLabel;
 
     EditableValueSlider osc1Tune;
     EditableValueSlider osc2Tune;
@@ -74,6 +99,8 @@ private:
     EditableValueSlider delayMix;
     EditableValueSlider reverbMix;
     EditableValueSlider outputGain;
+    EditableValueSlider mod1Amount;
+    EditableValueSlider mod2Amount;
 
     juce::Label osc1TuneLabel;
     juce::Label osc2TuneLabel;
@@ -105,11 +132,22 @@ private:
     juce::Label delayMixLabel;
     juce::Label reverbMixLabel;
     juce::Label outputGainLabel;
+    juce::Label mod1AmountLabel;
+    juce::Label mod2AmountLabel;
 
     ComboAttachment waveformAttachment;
+    ComboAttachment osc2WaveformAttachment;
+    ComboAttachment osc3WaveformAttachment;
+    ComboAttachment osc1OctaveAttachment;
+    ComboAttachment osc2OctaveAttachment;
+    ComboAttachment osc3OctaveAttachment;
     ComboAttachment voiceModeAttachment;
     ComboAttachment lfoDestinationAttachment;
     ComboAttachment dualFilterModeAttachment;
+    ComboAttachment mod1SourceAttachment;
+    ComboAttachment mod1DestinationAttachment;
+    ComboAttachment mod2SourceAttachment;
+    ComboAttachment mod2DestinationAttachment;
     SliderAttachment osc1TuneAttachment;
     SliderAttachment osc2TuneAttachment;
     SliderAttachment osc3TuneAttachment;
@@ -140,6 +178,8 @@ private:
     SliderAttachment delayMixAttachment;
     SliderAttachment reverbMixAttachment;
     SliderAttachment outputGainAttachment;
+    SliderAttachment mod1AmountAttachment;
+    SliderAttachment mod2AmountAttachment;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SynthAudioProcessorEditor)
 };

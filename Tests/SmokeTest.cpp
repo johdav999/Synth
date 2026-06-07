@@ -121,6 +121,16 @@ int main()
     const auto guiKeyboardEnergy = renderGuiKeyboardEnergy(processor, 64, 10);
     require(guiKeyboardEnergy > 0.001f, "GUI piano roll did not produce audible output");
 
+    setParameter(parameters, "Osc1Waveform", 1.0f);
+    setParameter(parameters, "Osc2Waveform", 2.0f);
+    setParameter(parameters, "Osc3Waveform", 1.0f);
+    setParameter(parameters, "Osc1Octave", 4.0f);
+    setParameter(parameters, "Osc2Octave", 3.0f);
+    setParameter(parameters, "Osc3Octave", 2.0f);
+    setParameter(parameters, "OutputGain", 1.0f);
+    const auto highNoteEnergy = renderEnergy(processor, 96, 10);
+    require(highNoteEnergy > 0.001f, "High-note PolyBLEP render was silent");
+
     juce::MemoryBlock state;
     processor.getStateInformation(state);
     require(state.getSize() > 0, "State serialisation produced no data");

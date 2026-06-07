@@ -34,17 +34,20 @@ struct Program
 
 const Program programs[] {
     { "Init Bass", {
-        { "Waveform", 1.0f }, { "Osc1Level", 0.9f }, { "Osc2Level", 0.45f }, { "Osc3Level", 0.25f },
+        { "Waveform", 1.0f }, { "Osc1Waveform", 1.0f }, { "Osc2Waveform", 1.0f }, { "Osc3Waveform", 1.0f },
+        { "Osc1Level", 0.9f }, { "Osc2Level", 0.45f }, { "Osc3Level", 0.25f },
         { "Osc3Tune", -12.0f }, { "FilterCutoff", 850.0f }, { "FilterResonance", 0.22f },
         { "FilterEnvAmount", 2400.0f }, { "AmpSustain", 0.75f }, { "MixerDrive", 1.8f }
     } },
     { "Warm Lead", {
-        { "Waveform", 1.0f }, { "Osc1Level", 0.75f }, { "Osc2Tune", 7.0f }, { "Osc2Level", 0.35f },
+        { "Waveform", 1.0f }, { "Osc1Waveform", 1.0f }, { "Osc2Waveform", 1.0f }, { "Osc3Waveform", 2.0f },
+        { "Osc1Level", 0.75f }, { "Osc2Tune", 7.0f }, { "Osc2Level", 0.35f },
         { "Osc3Level", 0.0f }, { "FilterCutoff", 2200.0f }, { "FilterResonance", 0.32f },
         { "LfoRate", 5.0f }, { "LfoDepth", 0.12f }, { "GlideTime", 0.08f }
     } },
     { "Soft Pad", {
-        { "VoiceMode", 1.0f }, { "Waveform", 3.0f }, { "Osc1Level", 0.5f }, { "Osc2Tune", 0.12f },
+        { "VoiceMode", 1.0f }, { "Waveform", 3.0f }, { "Osc1Waveform", 3.0f }, { "Osc2Waveform", 1.0f }, { "Osc3Waveform", 3.0f },
+        { "Osc1Level", 0.5f }, { "Osc2Tune", 0.12f },
         { "Osc2Level", 0.45f }, { "Osc3Tune", -12.0f }, { "FilterCutoff", 3100.0f },
         { "AmpAttack", 0.75f }, { "AmpRelease", 1.8f }, { "ChorusMix", 0.35f }, { "ReverbMix", 0.25f }
     } },
@@ -142,13 +145,44 @@ void SynthAudioProcessor::AnalogVoice::channelPressureChanged(int newChannelPres
     aftertouch = static_cast<float>(newChannelPressureValue) / 127.0f;
 }
 
-float SynthAudioProcessor::AnalogVoice::oscillatorSample(int waveform, double phase, double pulseWidth)
+float SynthAudioProcessor::AnalogVoice::polyBlep(double phase, double phaseIncrement)
+{
+    const auto dt = juce::jlimit(1.0e-6, 0.5, phaseIncrement);
+
+    if (phase < dt)
+    {
+        const auto t = phase / dt;
+        return static_cast<float>(t + t - t * t - 1.0);
+    }
+
+    if (phase > 1.0 - dt)
+    {
+        const auto t = (phase - 1.0) / dt;
+        return static_cast<float>(t * t + t + t + 1.0);
+    }
+
+    return 0.0f;
+}
+
+float SynthAudioProcessor::AnalogVoice::oscillatorSample(int waveform, double phase, double pulseWidth, double phaseIncrement)
 {
     switch (waveform)
     {
         case 0: return static_cast<float>(std::sin(juce::MathConstants<double>::twoPi * phase));
-        case 1: return static_cast<float>(2.0 * phase - 1.0);
-        case 2: return phase < pulseWidth ? 1.0f : -1.0f;
+        case 1:
+        {
+            auto value = static_cast<float>(2.0 * phase - 1.0);
+            value -= polyBlep(phase, phaseIncrement);
+            return value;
+        }
+        case 2:
+        {
+            auto value = phase < pulseWidth ? 1.0f : -1.0f;
+            value += polyBlep(phase, phaseIncrement);
+            const auto fallingEdgePhase = std::fmod(phase - pulseWidth + 1.0, 1.0);
+            value -= polyBlep(fallingEdgePhase, phaseIncrement);
+            return value;
+        }
         default: return phase < 0.5 ? static_cast<float>(phase * 4.0 - 1.0) : static_cast<float>(3.0 - phase * 4.0);
     }
 }
@@ -200,7 +234,16 @@ void SynthAudioProcessor::AnalogVoice::renderNextBlock(juce::AudioBuffer<float>&
         raw(parameters, "Osc3Level")->load()
     };
 
-    const auto waveform = static_cast<int>(raw(parameters, "Waveform")->load());
+    const std::array<int, 3> waveforms {
+        static_cast<int>(raw(parameters, "Osc1Waveform")->load()),
+        static_cast<int>(raw(parameters, "Osc2Waveform")->load()),
+        static_cast<int>(raw(parameters, "Osc3Waveform")->load())
+    };
+    const std::array<float, 3> octaveOffsets {
+        (raw(parameters, "Osc1Octave")->load() - 2.0f) * 12.0f,
+        (raw(parameters, "Osc2Octave")->load() - 2.0f) * 12.0f,
+        (raw(parameters, "Osc3Octave")->load() - 2.0f) * 12.0f
+    };
     const auto pulseWidth = static_cast<double>(raw(parameters, "PulseWidth")->load());
     const auto noiseLevel = raw(parameters, "NoiseLevel")->load();
     const auto drive = raw(parameters, "MixerDrive")->load();
@@ -267,11 +310,13 @@ void SynthAudioProcessor::AnalogVoice::renderNextBlock(juce::AudioBuffer<float>&
         for (auto osc = 0; osc < 3; ++osc)
         {
             const auto drift = std::sin(lfoPhase * juce::MathConstants<double>::twoPi * (1.0 + osc)) * driftRate;
-            const auto semitoneBend = pitchMod + static_cast<float>(drift);
+            const auto semitoneBend = octaveOffsets[static_cast<size_t>(osc)] + pitchMod + static_cast<float>(drift);
             const auto frequencyRatio = std::pow(2.0, static_cast<double>(semitoneBend) / 12.0);
             const auto width = juce::jlimit(0.05, 0.95, pulseWidth + static_cast<double>(pulseWidthMod));
-            mixed += oscillatorSample(waveform, phases[static_cast<size_t>(osc)], width) * levels[static_cast<size_t>(osc)];
-            phases[static_cast<size_t>(osc)] += increments[static_cast<size_t>(osc)] * frequencyRatio;
+            const auto phaseIncrement = increments[static_cast<size_t>(osc)] * frequencyRatio;
+            mixed += oscillatorSample(waveforms[static_cast<size_t>(osc)], phases[static_cast<size_t>(osc)], width, phaseIncrement)
+                * levels[static_cast<size_t>(osc)];
+            phases[static_cast<size_t>(osc)] += phaseIncrement;
             phases[static_cast<size_t>(osc)] -= std::floor(phases[static_cast<size_t>(osc)]);
         }
 
@@ -339,6 +384,7 @@ SynthAudioProcessor::SynthAudioProcessor()
     }
 
     debugLog("Processor constructed. Log file: " + logger->getLogFile().getFullPathName());
+    currentProgramName = programs[currentProgram].name;
     synth.addSound(new AnalogSound());
     configureVoiceCount();
 }
@@ -395,6 +441,13 @@ void SynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
     const auto outputGain = raw(parameters, "OutputGain")->load();
     buffer.applyGain(outputGain);
 
+    for (auto channel = 0; channel < buffer.getNumChannels(); ++channel)
+    {
+        auto* samples = buffer.getWritePointer(channel);
+        for (auto sample = 0; sample < buffer.getNumSamples(); ++sample)
+            samples[sample] = std::tanh(juce::jlimit(-4.0f, 4.0f, samples[sample]));
+    }
+
     if (--processLogCountdown <= 0)
     {
         processLogCountdown = 120;
@@ -429,6 +482,63 @@ const juce::String SynthAudioProcessor::getProgramName(int index)
 void SynthAudioProcessor::changeProgramName(int, const juce::String&) {}
 juce::AudioProcessorValueTreeState& SynthAudioProcessor::getParameters() { return parameters; }
 juce::MidiKeyboardState& SynthAudioProcessor::getKeyboardState() { return keyboardState; }
+juce::String SynthAudioProcessor::getCurrentProgramDisplayName() const { return currentProgramName; }
+
+void SynthAudioProcessor::selectPreviousProgram()
+{
+    const auto nextIndex = (currentProgram + static_cast<int>(std::size(programs)) - 1) % static_cast<int>(std::size(programs));
+    setCurrentProgram(nextIndex);
+}
+
+void SynthAudioProcessor::selectNextProgram()
+{
+    const auto nextIndex = (currentProgram + 1) % static_cast<int>(std::size(programs));
+    setCurrentProgram(nextIndex);
+}
+
+bool SynthAudioProcessor::saveUserPreset()
+{
+    auto state = parameters.copyState();
+    state.setProperty("currentProgram", currentProgram, nullptr);
+    state.setProperty("programName", currentProgramName, nullptr);
+
+    if (auto xml = state.createXml())
+    {
+        const auto file = getUserPresetFile();
+        file.getParentDirectory().createDirectory();
+        const auto ok = xml->writeTo(file);
+        debugLog("save user preset: " + file.getFullPathName() + " ok=" + juce::String(ok ? "true" : "false"));
+        return ok;
+    }
+
+    return false;
+}
+
+bool SynthAudioProcessor::loadUserPreset()
+{
+    const auto file = getUserPresetFile();
+    if (! file.existsAsFile())
+    {
+        debugLog("load user preset missing: " + file.getFullPathName());
+        return false;
+    }
+
+    if (auto xml = juce::parseXML(file))
+    {
+        if (xml->hasTagName(parameters.state.getType()))
+        {
+            auto state = juce::ValueTree::fromXml(*xml);
+            currentProgram = static_cast<int>(state.getProperty("currentProgram", -1));
+            currentProgramName = state.getProperty("programName", "User Preset").toString();
+            parameters.replaceState(state);
+            debugLog("loaded user preset: " + file.getFullPathName());
+            return true;
+        }
+    }
+
+    debugLog("load user preset failed: " + file.getFullPathName());
+    return false;
+}
 
 void SynthAudioProcessor::configureVoiceCount()
 {
@@ -505,9 +615,19 @@ void SynthAudioProcessor::loadProgram(int index)
         return;
 
     currentProgram = index;
+    currentProgramName = programs[index].name;
     debugLog("loading program: " + juce::String(programs[index].name));
     for (const auto& value : programs[index].values)
         setProgramValue(parameters, value.id, value.value);
+}
+
+juce::File SynthAudioProcessor::getUserPresetFile() const
+{
+    auto root = juce::File(juce::SystemStats::getEnvironmentVariable("LOCALAPPDATA", {}));
+    if (! root.isDirectory())
+        root = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory);
+
+    return root.getChildFile("Synth").getChildFile("UserPreset.xml");
 }
 
 void SynthAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
@@ -523,7 +643,11 @@ void SynthAudioProcessor::debugLog(const juce::String& message)
 
 void SynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)
 {
-    if (auto state = parameters.copyState(); auto xml = state.createXml())
+    auto state = parameters.copyState();
+    state.setProperty("currentProgram", currentProgram, nullptr);
+    state.setProperty("programName", currentProgramName, nullptr);
+
+    if (auto xml = state.createXml())
         copyXmlToBinary(*xml, destData);
 }
 
@@ -531,7 +655,12 @@ void SynthAudioProcessor::setStateInformation(const void* data, int sizeInBytes)
 {
     if (auto xml = getXmlFromBinary(data, sizeInBytes))
         if (xml->hasTagName(parameters.state.getType()))
-            parameters.replaceState(juce::ValueTree::fromXml(*xml));
+        {
+            auto state = juce::ValueTree::fromXml(*xml);
+            currentProgram = static_cast<int>(state.getProperty("currentProgram", currentProgram));
+            currentProgramName = state.getProperty("programName", currentProgramName).toString();
+            parameters.replaceState(state);
+        }
 }
 
 juce::AudioProcessorValueTreeState::ParameterLayout SynthAudioProcessor::createParameterLayout()
@@ -549,6 +678,18 @@ juce::AudioProcessorValueTreeState::ParameterLayout SynthAudioProcessor::createP
 
     params.push_back(std::make_unique<juce::AudioParameterChoice>(
         juce::ParameterID { "Waveform", 1 }, "Waveform", juce::StringArray { "Sine", "Saw", "Pulse", "Triangle" }, 1));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID { "Osc1Waveform", 1 }, "Osc 1 Waveform", juce::StringArray { "Sine", "Saw", "Pulse", "Triangle" }, 1));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID { "Osc2Waveform", 1 }, "Osc 2 Waveform", juce::StringArray { "Sine", "Saw", "Pulse", "Triangle" }, 1));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID { "Osc3Waveform", 1 }, "Osc 3 Waveform", juce::StringArray { "Sine", "Saw", "Pulse", "Triangle" }, 1));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID { "Osc1Octave", 1 }, "Osc 1 Octave", juce::StringArray { "-2", "-1", "0", "+1", "+2" }, 2));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID { "Osc2Octave", 1 }, "Osc 2 Octave", juce::StringArray { "-2", "-1", "0", "+1", "+2" }, 2));
+    params.push_back(std::make_unique<juce::AudioParameterChoice>(
+        juce::ParameterID { "Osc3Octave", 1 }, "Osc 3 Octave", juce::StringArray { "-2", "-1", "0", "+1", "+2" }, 1));
 
     addFloat("Osc1Tune", "Osc 1 Tune", -24.0f, 24.0f, 0.0f);
     addFloat("Osc2Tune", "Osc 2 Tune", -24.0f, 24.0f, 0.0f);
