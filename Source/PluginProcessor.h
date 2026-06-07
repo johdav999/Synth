@@ -53,6 +53,8 @@ private:
         void stopNote(float velocity, bool allowTailOff) override;
         void pitchWheelMoved(int newPitchWheelValue) override;
         void controllerMoved(int controllerNumber, int newControllerValue) override;
+        void aftertouchChanged(int newAftertouchValue) override;
+        void channelPressureChanged(int newChannelPressureValue) override;
         void prepare(double sampleRate, int samplesPerBlock, int outputChannels);
         void renderNextBlock(juce::AudioBuffer<float>& outputBuffer, int startSample, int numSamples) override;
 
@@ -64,12 +66,14 @@ private:
         };
 
         void updateParameters();
+        float modulationSource(int source, float lfo, float velocity, float aftertouch, float envelope) const;
         static float oscillatorSample(int waveform, double phase, double pulseWidth);
 
         juce::AudioProcessorValueTreeState& parameters;
         juce::ADSR ampEnvelope;
         juce::ADSR filterEnvelope;
         VoiceLadderFilter filter;
+        VoiceLadderFilter filter2;
         juce::AudioBuffer<float> voiceBuffer;
 
         std::array<double, 3> phases {};
@@ -78,13 +82,30 @@ private:
 
         double currentSampleRate = 44100.0;
         double baseFrequency = 440.0;
+        double currentFrequency = 440.0;
+        double targetFrequency = 440.0;
+        double lfoPhase = 0.0;
         float noteVelocity = 0.0f;
+        float aftertouch = 0.0f;
         int pitchWheelValue = 8192;
         juce::Random random;
     };
 
+    void configureVoiceCount();
+    void applyEffects(juce::AudioBuffer<float>& buffer);
+    void loadProgram(int index);
+
     juce::Synthesiser synth;
     juce::AudioProcessorValueTreeState parameters;
+    juce::dsp::Chorus<float> chorus;
+    juce::Reverb reverb;
+    juce::AudioBuffer<float> delayBuffer;
+    int delayWritePosition = 0;
+    int configuredVoiceCount = 0;
+    int currentProgram = 0;
+    double preparedSampleRate = 0.0;
+    int preparedSamplesPerBlock = 0;
+    int preparedOutputChannels = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SynthAudioProcessor)
 };

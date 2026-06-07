@@ -28,6 +28,10 @@ target_sources(Synth
         Source/PluginEditor.cpp
         Source/PluginProcessor.cpp)
 
+target_include_directories(Synth
+    PUBLIC
+        Source)
+
 target_compile_definitions(Synth
     PUBLIC
         JUCE_WEB_BROWSER=0
@@ -41,6 +45,22 @@ target_link_libraries(Synth
     PUBLIC
         juce::juce_recommended_config_flags
         juce::juce_recommended_lto_flags
+        juce::juce_recommended_warning_flags)
+
+juce_add_console_app(SynthSmokeTest
+    PRODUCT_NAME "Synth Smoke Test")
+
+target_sources(SynthSmokeTest
+    PRIVATE
+        Tests/SmokeTest.cpp)
+
+target_link_libraries(SynthSmokeTest
+    PRIVATE
+        Synth
+        juce::juce_audio_utils
+        juce::juce_dsp
+    PUBLIC
+        juce::juce_recommended_config_flags
         juce::juce_recommended_warning_flags)
 
 if(SYNTH_BUILD_HOST)

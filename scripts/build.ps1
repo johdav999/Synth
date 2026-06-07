@@ -20,7 +20,14 @@ if (-not [Environment]::GetEnvironmentVariable("path", "Process")) {
 }
 
 Invoke-Native $cmake -S $root -B $buildDir -G "Visual Studio 17 2022" -A x64 -DSYNTH_BUILD_HOST=ON
-Invoke-Native $cmake --build $buildDir --config Release --target Synth_VST3 AudioPluginHost
+Invoke-Native $cmake --build $buildDir --config Release --target Synth_VST3 AudioPluginHost SynthSmokeTest
+
+$smokeTest = Get-ChildItem -LiteralPath $buildDir -Recurse -Filter "SynthSmokeTest.exe" | Select-Object -First 1
+if (-not $smokeTest) {
+    throw "SynthSmokeTest.exe was not found after build."
+}
+
+Invoke-Native $smokeTest.FullName
 
 Write-Host ""
 Write-Host "Built VST3:"
