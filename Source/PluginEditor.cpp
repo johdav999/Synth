@@ -288,14 +288,14 @@ SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
     addKnob(filterResonance, filterResonanceLabel, "Resonance");
     addKnob(filterEnvAmount, filterEnvAmountLabel, "Env Amount");
     addKnob(filterDrive, filterDriveLabel, "Filter Drive");
-    addEnvelopeSlider(filterAttack, filterAttackLabel, "F A");
-    addEnvelopeSlider(filterDecay, filterDecayLabel, "F D");
-    addEnvelopeSlider(filterSustain, filterSustainLabel, "F S");
-    addEnvelopeSlider(filterRelease, filterReleaseLabel, "F R");
-    addEnvelopeSlider(ampAttack, ampAttackLabel, "A A");
-    addEnvelopeSlider(ampDecay, ampDecayLabel, "A D");
-    addEnvelopeSlider(ampSustain, ampSustainLabel, "A S");
-    addEnvelopeSlider(ampRelease, ampReleaseLabel, "A R");
+    addEnvelopeSlider(filterAttack, filterAttackLabel, "A");
+    addEnvelopeSlider(filterDecay, filterDecayLabel, "D");
+    addEnvelopeSlider(filterSustain, filterSustainLabel, "S");
+    addEnvelopeSlider(filterRelease, filterReleaseLabel, "R");
+    addEnvelopeSlider(ampAttack, ampAttackLabel, "A");
+    addEnvelopeSlider(ampDecay, ampDecayLabel, "D");
+    addEnvelopeSlider(ampSustain, ampSustainLabel, "S");
+    addEnvelopeSlider(ampRelease, ampReleaseLabel, "R");
     addKnob(lfoRate, lfoRateLabel, "LFO Rate");
     addKnob(lfoDepth, lfoDepthLabel, "LFO Depth");
     addKnob(glideTime, glideTimeLabel, "Glide");
@@ -306,6 +306,7 @@ SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
 
     filterCutoff.setName("Cutoff");
     filterCutoff.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 84, 18);
+    filterCutoff.setNumDecimalPlacesToDisplay(1);
     refocusPianoKeyboard();
 }
 
@@ -318,7 +319,7 @@ void SynthAudioProcessorEditor::addKnob(juce::Slider& slider, juce::Label& label
 {
     slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 66, 18);
-    slider.setNumDecimalPlacesToDisplay(2);
+    slider.setNumDecimalPlacesToDisplay(1);
     slider.setPopupDisplayEnabled(true, false, this);
     slider.setWantsKeyboardFocus(false);
     slider.setMouseClickGrabsKeyboardFocus(false);
@@ -339,7 +340,7 @@ void SynthAudioProcessorEditor::addEnvelopeSlider(juce::Slider& slider, juce::La
 {
     slider.setSliderStyle(juce::Slider::LinearVertical);
     slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 18);
-    slider.setNumDecimalPlacesToDisplay(2);
+    slider.setNumDecimalPlacesToDisplay(1);
     slider.setPopupDisplayEnabled(true, false, this);
     slider.setWantsKeyboardFocus(false);
     slider.setMouseClickGrabsKeyboardFocus(false);
@@ -570,6 +571,8 @@ void SynthAudioProcessorEditor::paint(juce::Graphics& g)
     g.drawText("HP", 810, 152, 24, 16, juce::Justification::centred);
     g.drawText("12 dB", 982, 152, 42, 16, juce::Justification::centred);
     g.drawText("24 dB", 982, 174, 42, 16, juce::Justification::centred);
+    g.drawText("FILTER ENVELOPE", 1070, 148, 145, 16, juce::Justification::centred);
+    g.drawText("AMP ENVELOPE", 1070, 280, 145, 16, juce::Justification::centred);
     drawToggle(792, 168, true, "MODE");
     drawToggle(1004, 168, true, "SLOPE");
 
@@ -661,14 +664,14 @@ void SynthAudioProcessorEditor::resized()
     place(filterEnvAmount, filterEnvAmountLabel, 936, 308, 78, 90);
     place(filterDrive, filterDriveLabel, 916, 136, 78, 90);
 
-    placeEnv(filterAttack, filterAttackLabel, 1064, 142);
-    placeEnv(filterDecay, filterDecayLabel, 1108, 142);
-    placeEnv(filterSustain, filterSustainLabel, 1152, 142);
-    placeEnv(filterRelease, filterReleaseLabel, 1196, 142);
-    placeEnv(ampAttack, ampAttackLabel, 1064, 274);
-    placeEnv(ampDecay, ampDecayLabel, 1108, 274);
-    placeEnv(ampSustain, ampSustainLabel, 1152, 274);
-    placeEnv(ampRelease, ampReleaseLabel, 1196, 274);
+    placeEnv(filterAttack, filterAttackLabel, 1064, 166);
+    placeEnv(filterDecay, filterDecayLabel, 1108, 166);
+    placeEnv(filterSustain, filterSustainLabel, 1152, 166);
+    placeEnv(filterRelease, filterReleaseLabel, 1196, 166);
+    placeEnv(ampAttack, ampAttackLabel, 1064, 298);
+    placeEnv(ampDecay, ampDecayLabel, 1108, 298);
+    placeEnv(ampSustain, ampSustainLabel, 1152, 298);
+    placeEnv(ampRelease, ampReleaseLabel, 1196, 298);
 
     lfoDestinationLabel.setBounds(74, 462, 92, 18);
     lfoDestination.setBounds(74, 482, 122, 26);
