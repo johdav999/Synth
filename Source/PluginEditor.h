@@ -23,6 +23,7 @@ private:
 
     SynthAudioProcessor& processor;
     std::unique_ptr<juce::LookAndFeel_V4> retroLookAndFeel;
+    juce::MidiKeyboardComponent pianoKeyboard;
 
     juce::ComboBox waveform;
     juce::ComboBox voiceMode;

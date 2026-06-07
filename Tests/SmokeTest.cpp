@@ -49,6 +49,35 @@ float renderEnergy(SynthAudioProcessor& processor, int note, int blocks)
     processor.processBlock(buffer, midi);
     return energy;
 }
+
+float renderGuiKeyboardEnergy(SynthAudioProcessor& processor, int note, int blocks)
+{
+    juce::AudioBuffer<float> buffer(2, 512);
+    juce::MidiBuffer midi;
+    float energy = 0.0f;
+
+    processor.getKeyboardState().noteOn(1, note, 0.9f);
+
+    for (auto block = 0; block < blocks; ++block)
+    {
+        processor.processBlock(buffer, midi);
+        midi.clear();
+
+        for (auto channel = 0; channel < buffer.getNumChannels(); ++channel)
+        {
+            const auto* data = buffer.getReadPointer(channel);
+            for (auto sample = 0; sample < buffer.getNumSamples(); ++sample)
+            {
+                require(std::isfinite(data[sample]), "GUI keyboard render contains a non-finite sample");
+                energy += std::abs(data[sample]);
+            }
+        }
+    }
+
+    processor.getKeyboardState().noteOff(1, note, 0.0f);
+    processor.processBlock(buffer, midi);
+    return energy;
+}
 }
 
 int main()
@@ -88,6 +117,9 @@ int main()
     setParameter(parameters, "Osc3Level", 0.0f);
     const auto unmutedEnergy = renderEnergy(processor, 60, 10);
     require(unmutedEnergy > 0.001f, "Parameter changes did not restore audible output");
+
+    const auto guiKeyboardEnergy = renderGuiKeyboardEnergy(processor, 64, 10);
+    require(guiKeyboardEnergy > 0.001f, "GUI piano roll did not produce audible output");
 
     juce::MemoryBlock state;
     processor.getStateInformation(state);

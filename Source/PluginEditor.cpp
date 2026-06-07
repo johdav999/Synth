@@ -3,7 +3,7 @@
 namespace
 {
 constexpr int editorWidth = 1280;
-constexpr int editorHeight = 720;
+constexpr int editorHeight = 820;
 constexpr int woodWidth = 38;
 
 const auto panel = juce::Colour(0xff151512);
@@ -207,6 +207,7 @@ SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
     : AudioProcessorEditor(&p),
       processor(p),
       retroLookAndFeel(std::make_unique<RetroLookAndFeel>()),
+      pianoKeyboard(processor.getKeyboardState(), juce::MidiKeyboardComponent::horizontalKeyboard),
       waveformAttachment(processor.getParameters(), "Waveform", waveform),
       voiceModeAttachment(processor.getParameters(), "VoiceMode", voiceMode),
       lfoDestinationAttachment(processor.getParameters(), "LfoDestination", lfoDestination),
@@ -244,6 +245,21 @@ SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
 {
     setSize(editorWidth, editorHeight);
     setLookAndFeel(retroLookAndFeel.get());
+
+    pianoKeyboard.setAvailableRange(24, 96);
+    pianoKeyboard.setLowestVisibleKey(36);
+    pianoKeyboard.setKeyWidth(20.0f);
+    pianoKeyboard.setScrollButtonsVisible(true);
+    pianoKeyboard.setVelocity(0.85f, true);
+    pianoKeyboard.setMidiChannel(1);
+    pianoKeyboard.setColour(juce::MidiKeyboardComponent::whiteNoteColourId, juce::Colour(0xffe7d8bd));
+    pianoKeyboard.setColour(juce::MidiKeyboardComponent::blackNoteColourId, juce::Colour(0xff080806));
+    pianoKeyboard.setColour(juce::MidiKeyboardComponent::keySeparatorLineColourId, juce::Colour(0xff2e2518));
+    pianoKeyboard.setColour(juce::MidiKeyboardComponent::mouseOverKeyOverlayColourId, amber.withAlpha(0.18f));
+    pianoKeyboard.setColour(juce::MidiKeyboardComponent::keyDownOverlayColourId, amber.withAlpha(0.42f));
+    pianoKeyboard.setColour(juce::MidiKeyboardComponent::textLabelColourId, juce::Colour(0xff3c2a14));
+    pianoKeyboard.setColour(juce::MidiKeyboardComponent::shadowColourId, juce::Colour(0xcc000000));
+    addAndMakeVisible(pianoKeyboard);
 
     waveform.addItemList({ "Sine", "Saw", "Pulse", "Triangle" }, 1);
     voiceMode.addItemList({ "Mono", "Poly" }, 1);
@@ -500,6 +516,7 @@ void SynthAudioProcessorEditor::paint(juce::Graphics& g)
     drawSection(g, { 584, 606, 210, 106 }, "ENVELOPE");
     drawSection(g, { 806, 606, 230, 106 }, "VOICES");
     drawSection(g, { 1048, 606, 192, 106 }, "UNISON");
+    drawSection(g, { 50, 718, 1190, 86 }, "PIANO ROLL");
 
     g.setColour(outline.withAlpha(0.6f));
     g.drawLine(72.0f, 198.0f, 458.0f, 198.0f, 1.0f);
@@ -621,6 +638,11 @@ void SynthAudioProcessorEditor::paint(juce::Graphics& g)
     drawLed(g, { 67.0f, 456.0f });
     drawLed(g, { 586.0f, 456.0f });
     drawLed(g, { 1212.0f, 456.0f });
+    drawLed(g, { 67.0f, 744.0f });
+
+    g.setColour(mutedCream);
+    g.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+    g.drawText("MOUSE PLAYABLE", 92, 735, 160, 16, juce::Justification::centredLeft);
 }
 
 void SynthAudioProcessorEditor::resized()
@@ -687,4 +709,6 @@ void SynthAudioProcessorEditor::resized()
     place(delayMix, delayMixLabel, 850, 462, 76, 90);
     place(reverbMix, reverbMixLabel, 932, 462, 76, 90);
     place(outputGain, outputGainLabel, 970, 462, 78, 96);
+
+    pianoKeyboard.setBounds(72, 752, 1146, 42);
 }

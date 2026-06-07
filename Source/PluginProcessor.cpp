@@ -388,6 +388,7 @@ void SynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
     juce::ScopedNoDenormals noDenormals;
     configureVoiceCount();
     buffer.clear();
+    keyboardState.processNextMidiBuffer(midiMessages, 0, buffer.getNumSamples(), true);
     synth.renderNextBlock(buffer, midiMessages, 0, buffer.getNumSamples());
     applyEffects(buffer);
 
@@ -427,6 +428,7 @@ const juce::String SynthAudioProcessor::getProgramName(int index)
 }
 void SynthAudioProcessor::changeProgramName(int, const juce::String&) {}
 juce::AudioProcessorValueTreeState& SynthAudioProcessor::getParameters() { return parameters; }
+juce::MidiKeyboardState& SynthAudioProcessor::getKeyboardState() { return keyboardState; }
 
 void SynthAudioProcessor::configureVoiceCount()
 {

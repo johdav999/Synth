@@ -1,6 +1,7 @@
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
+#include <juce_audio_utils/juce_audio_utils.h>
 #include <juce_dsp/juce_dsp.h>
 
 class SynthAudioProcessor final : public juce::AudioProcessor,
@@ -34,6 +35,7 @@ public:
     void setStateInformation(const void* data, int sizeInBytes) override;
 
     juce::AudioProcessorValueTreeState& getParameters();
+    juce::MidiKeyboardState& getKeyboardState();
     static juce::AudioProcessorValueTreeState::ParameterLayout createParameterLayout();
 
 private:
@@ -99,6 +101,7 @@ private:
     void debugLog(const juce::String& message);
 
     juce::Synthesiser synth;
+    juce::MidiKeyboardState keyboardState;
     juce::AudioProcessorValueTreeState parameters;
     juce::StringArray parameterIds;
     std::unique_ptr<juce::FileLogger> logger;
