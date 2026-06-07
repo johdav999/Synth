@@ -3,11 +3,12 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 #include <juce_dsp/juce_dsp.h>
 
-class SynthAudioProcessor final : public juce::AudioProcessor
+class SynthAudioProcessor final : public juce::AudioProcessor,
+                                  private juce::AudioProcessorValueTreeState::Listener
 {
 public:
     SynthAudioProcessor();
-    ~SynthAudioProcessor() override = default;
+    ~SynthAudioProcessor() override;
 
     void prepareToPlay(double sampleRate, int samplesPerBlock) override;
     void releaseResources() override;
@@ -94,9 +95,13 @@ private:
     void configureVoiceCount();
     void applyEffects(juce::AudioBuffer<float>& buffer);
     void loadProgram(int index);
+    void parameterChanged(const juce::String& parameterID, float newValue) override;
+    void debugLog(const juce::String& message);
 
     juce::Synthesiser synth;
     juce::AudioProcessorValueTreeState parameters;
+    juce::StringArray parameterIds;
+    std::unique_ptr<juce::FileLogger> logger;
     juce::dsp::Chorus<float> chorus;
     juce::Reverb reverb;
     juce::AudioBuffer<float> delayBuffer;
@@ -106,6 +111,7 @@ private:
     double preparedSampleRate = 0.0;
     int preparedSamplesPerBlock = 0;
     int preparedOutputChannels = 0;
+    int processLogCountdown = 0;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR(SynthAudioProcessor)
 };

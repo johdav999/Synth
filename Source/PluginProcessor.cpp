@@ -321,12 +321,41 @@ SynthAudioProcessor::SynthAudioProcessor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)),
       parameters(*this, nullptr, treeId, createParameterLayout())
 {
+    auto logRoot = juce::File(juce::SystemStats::getEnvironmentVariable("LOCALAPPDATA", {}));
+    if (! logRoot.isDirectory())
+        logRoot = juce::File::getSpecialLocation(juce::File::userApplicationDataDirectory);
+
+    const auto logDirectory = logRoot.getChildFile("Synth");
+    logDirectory.createDirectory();
+    logger = std::make_unique<juce::FileLogger>(logDirectory.getChildFile("debug.log"), "Synth debug log", 512 * 1024);
+
+    for (auto* parameter : AudioProcessor::getParameters())
+    {
+        if (auto* ranged = dynamic_cast<juce::RangedAudioParameter*>(parameter))
+        {
+            parameterIds.add(ranged->paramID);
+            parameters.addParameterListener(ranged->paramID, this);
+        }
+    }
+
+    debugLog("Processor constructed. Log file: " + logger->getLogFile().getFullPathName());
     synth.addSound(new AnalogSound());
     configureVoiceCount();
 }
 
+SynthAudioProcessor::~SynthAudioProcessor()
+{
+    for (const auto& id : parameterIds)
+        parameters.removeParameterListener(id, this);
+
+    debugLog("Processor destroyed");
+}
+
 void SynthAudioProcessor::prepareToPlay(double sampleRate, int samplesPerBlock)
 {
+    debugLog("prepareToPlay sampleRate=" + juce::String(sampleRate)
+        + " blockSize=" + juce::String(samplesPerBlock)
+        + " outputs=" + juce::String(getTotalNumOutputChannels()));
     preparedSampleRate = sampleRate;
     preparedSamplesPerBlock = samplesPerBlock;
     preparedOutputChannels = getTotalNumOutputChannels();
@@ -364,6 +393,18 @@ void SynthAudioProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::M
 
     const auto outputGain = raw(parameters, "OutputGain")->load();
     buffer.applyGain(outputGain);
+
+    if (--processLogCountdown <= 0)
+    {
+        processLogCountdown = 120;
+        debugLog("process snapshot: cutoff=" + juce::String(raw(parameters, "FilterCutoff")->load(), 1)
+            + " osc1=" + juce::String(raw(parameters, "Osc1Level")->load(), 3)
+            + " osc2=" + juce::String(raw(parameters, "Osc2Level")->load(), 3)
+            + " osc3=" + juce::String(raw(parameters, "Osc3Level")->load(), 3)
+            + " noise=" + juce::String(raw(parameters, "NoiseLevel")->load(), 3)
+            + " output=" + juce::String(outputGain, 3)
+            + " midiEvents=" + juce::String(midiMessages.getNumEvents()));
+    }
 }
 
 juce::AudioProcessorEditor* SynthAudioProcessor::createEditor()
@@ -404,6 +445,7 @@ void SynthAudioProcessor::configureVoiceCount()
     }
 
     configuredVoiceCount = desiredVoiceCount;
+    debugLog("voice count configured: " + juce::String(configuredVoiceCount));
 }
 
 void SynthAudioProcessor::applyEffects(juce::AudioBuffer<float>& buffer)
@@ -461,8 +503,20 @@ void SynthAudioProcessor::loadProgram(int index)
         return;
 
     currentProgram = index;
+    debugLog("loading program: " + juce::String(programs[index].name));
     for (const auto& value : programs[index].values)
         setProgramValue(parameters, value.id, value.value);
+}
+
+void SynthAudioProcessor::parameterChanged(const juce::String& parameterID, float newValue)
+{
+    debugLog("parameterChanged " + parameterID + "=" + juce::String(newValue, 4));
+}
+
+void SynthAudioProcessor::debugLog(const juce::String& message)
+{
+    if (logger != nullptr)
+        logger->logMessage(message);
 }
 
 void SynthAudioProcessor::getStateInformation(juce::MemoryBlock& destData)

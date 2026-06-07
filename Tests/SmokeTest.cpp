@@ -78,6 +78,17 @@ int main()
     energy = renderEnergy(processor, 60, 20);
     require(energy > 0.001f, "Preset render was silent");
 
+    setParameter(parameters, "OutputGain", 0.0f);
+    const auto mutedEnergy = renderEnergy(processor, 60, 10);
+    require(mutedEnergy < 0.0001f, "OutputGain parameter did not mute rendered audio");
+
+    setParameter(parameters, "OutputGain", 0.8f);
+    setParameter(parameters, "Osc1Level", 1.0f);
+    setParameter(parameters, "Osc2Level", 0.0f);
+    setParameter(parameters, "Osc3Level", 0.0f);
+    const auto unmutedEnergy = renderEnergy(processor, 60, 10);
+    require(unmutedEnergy > 0.001f, "Parameter changes did not restore audible output");
+
     juce::MemoryBlock state;
     processor.getStateInformation(state);
     require(state.getSize() > 0, "State serialisation produced no data");
