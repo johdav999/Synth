@@ -19,6 +19,16 @@ private:
         {
             showTextBox();
         }
+
+        juce::String getTextFromValue(double value) override
+        {
+            return juce::String(value, 1);
+        }
+
+        double getValueFromText(const juce::String& text) override
+        {
+            return text.getDoubleValue();
+        }
     };
 
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;

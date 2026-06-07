@@ -376,6 +376,15 @@ SynthAudioProcessorEditor::SynthAudioProcessorEditor(SynthAudioProcessor& p)
     addKnob(mod1Amount, mod1AmountLabel, "Mod 1 Amt");
     addKnob(mod2Amount, mod2AmountLabel, "Mod 2 Amt");
 
+    for (auto* component : {
+             static_cast<juce::Component*>(&mod1Source), static_cast<juce::Component*>(&mod1Destination),
+             static_cast<juce::Component*>(&mod2Source), static_cast<juce::Component*>(&mod2Destination),
+             static_cast<juce::Component*>(&mod1SourceLabel), static_cast<juce::Component*>(&mod1DestinationLabel),
+             static_cast<juce::Component*>(&mod2SourceLabel), static_cast<juce::Component*>(&mod2DestinationLabel),
+             static_cast<juce::Component*>(&mod1Amount), static_cast<juce::Component*>(&mod2Amount),
+             static_cast<juce::Component*>(&mod1AmountLabel), static_cast<juce::Component*>(&mod2AmountLabel) })
+        component->setVisible(false);
+
     filterCutoff.setName("Cutoff");
     filterCutoff.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 84, 18);
     filterCutoff.setNumDecimalPlacesToDisplay(1);
@@ -393,14 +402,6 @@ void SynthAudioProcessorEditor::addKnob(juce::Slider& slider, juce::Label& label
     slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 66, 18);
     slider.setNumDecimalPlacesToDisplay(1);
-    slider.textFromValueFunction = [](double value)
-    {
-        return juce::String(value, 1);
-    };
-    slider.valueFromTextFunction = [](const juce::String& textValue)
-    {
-        return textValue.getDoubleValue();
-    };
     slider.setPopupDisplayEnabled(true, false, this);
     slider.setWantsKeyboardFocus(false);
     slider.setMouseClickGrabsKeyboardFocus(false);
@@ -422,14 +423,6 @@ void SynthAudioProcessorEditor::addEnvelopeSlider(juce::Slider& slider, juce::La
     slider.setSliderStyle(juce::Slider::LinearVertical);
     slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 50, 18);
     slider.setNumDecimalPlacesToDisplay(1);
-    slider.textFromValueFunction = [](double value)
-    {
-        return juce::String(value, 1);
-    };
-    slider.valueFromTextFunction = [](const juce::String& textValue)
-    {
-        return textValue.getDoubleValue();
-    };
     slider.setPopupDisplayEnabled(true, false, this);
     slider.setWantsKeyboardFocus(false);
     slider.setMouseClickGrabsKeyboardFocus(false);
@@ -675,30 +668,6 @@ void SynthAudioProcessorEditor::paint(juce::Graphics& g)
     drawToggle(1004, 168, true, "SLOPE");
 
     drawToggle(598, 332, true, "DRIVE");
-    drawToggle(580, 506, true, "VEL>AMP");
-    drawToggle(648, 506, true, "VEL>FILTER");
-    drawToggle(716, 506, false, "AFTERTOUCH");
-
-    auto drawEnvGraph = [&g](juce::Rectangle<int> envGraph)
-    {
-        g.setColour(juce::Colour(0xff11110f));
-        g.fillRoundedRectangle(envGraph.toFloat(), 3.0f);
-        g.setColour(outline.withAlpha(0.35f));
-        for (auto i = 1; i < 8; ++i)
-            g.drawVerticalLine(envGraph.getX() + i * envGraph.getWidth() / 8, static_cast<float>(envGraph.getY()), static_cast<float>(envGraph.getBottom()));
-        for (auto i = 1; i < 4; ++i)
-            g.drawHorizontalLine(envGraph.getY() + i * envGraph.getHeight() / 4, static_cast<float>(envGraph.getX()), static_cast<float>(envGraph.getRight()));
-        juce::Path envPath;
-        envPath.startNewSubPath(static_cast<float>(envGraph.getX() + 8), static_cast<float>(envGraph.getBottom() - 16));
-        envPath.lineTo(static_cast<float>(envGraph.getX() + 54), static_cast<float>(envGraph.getY() + 18));
-        envPath.lineTo(static_cast<float>(envGraph.getX() + 98), static_cast<float>(envGraph.getY() + 18));
-        envPath.lineTo(static_cast<float>(envGraph.getRight() - 10), static_cast<float>(envGraph.getBottom() - 16));
-        g.setColour(amber);
-        g.strokePath(envPath, juce::PathStrokeType(1.7f));
-    };
-
-    auto envGraph = juce::Rectangle<int>(615, 492, 144, 70);
-    drawEnvGraph(envGraph);
 
     drawHardwareButton({ 1080, 504, 34, 40 }, "1");
     drawHardwareButton({ 1118, 504, 34, 40 }, "2");
@@ -812,9 +781,9 @@ void SynthAudioProcessorEditor::resized()
     mod2Destination.setBounds(604, 578, 92, 24);
     place(mod2Amount, mod2AmountLabel, 710, 554, 60, 58);
 
-    place(delayMix, delayMixLabel, 850, 462, 76, 90);
-    place(reverbMix, reverbMixLabel, 932, 462, 76, 90);
-    place(outputGain, outputGainLabel, 970, 462, 78, 96);
+    place(delayMix, delayMixLabel, 830, 462, 66, 88);
+    place(reverbMix, reverbMixLabel, 904, 462, 66, 88);
+    place(outputGain, outputGainLabel, 978, 462, 66, 88);
 
     pianoKeyboard.setBounds(72, 640, 1146, 58);
 }
