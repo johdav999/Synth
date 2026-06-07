@@ -17,3 +17,7 @@ Run these prompts in order. After each prompt, build the VST3 and run the smoke 
 13. Add velocity and aftertouch modulation paths for cutoff, amplitude, and matrix sources.
 14. Add simple effects: chorus, delay, and reverb with conservative mix controls.
 15. Add advanced analog drift and dual-filter modes while preserving CPU-safe defaults.
+
+## GUI Follow-up
+
+Use [GUI Implementation Prompt](gui-implementation-prompt.md) to replace the current MVP editor with the retro hardware-style GUI described in `design.md`.
