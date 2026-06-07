@@ -402,57 +402,225 @@ void SynthAudioProcessorEditor::paint(juce::Graphics& g)
     g.setColour(juce::Colour(0xff050505));
     g.drawRoundedRectangle(face.toFloat(), 7.0f, 2.0f);
 
-    auto top = face.removeFromTop(70).reduced(10, 8);
+    auto top = face.removeFromTop(72).reduced(10, 8);
     g.setGradientFill(juce::ColourGradient(juce::Colour(0xff25241f), static_cast<float>(top.getX()), static_cast<float>(top.getY()),
                                            juce::Colour(0xff0e0e0c), static_cast<float>(top.getX()), static_cast<float>(top.getBottom()), false));
     g.fillRoundedRectangle(top.toFloat(), 4.0f);
     g.setColour(outline.withAlpha(0.45f));
     g.drawRoundedRectangle(top.toFloat(), 4.0f, 1.0f);
 
+    auto drawHardwareButton = [&g](juce::Rectangle<int> button, const juce::String& text)
+    {
+        g.setGradientFill(juce::ColourGradient(juce::Colour(0xff2b2924), static_cast<float>(button.getX()), static_cast<float>(button.getY()),
+                                               juce::Colour(0xff0c0c0b), static_cast<float>(button.getX()), static_cast<float>(button.getBottom()), false));
+        g.fillRoundedRectangle(button.toFloat(), 3.0f);
+        g.setColour(juce::Colour(0xff050505));
+        g.drawRoundedRectangle(button.toFloat(), 3.0f, 1.5f);
+        g.setColour(outline.withAlpha(0.45f));
+        g.drawRoundedRectangle(button.reduced(2).toFloat(), 2.0f, 1.0f);
+        g.setColour(text == "8" ? amber : cream);
+        g.setFont(juce::FontOptions(14.0f, juce::Font::bold));
+        g.drawText(text, button, juce::Justification::centred);
+    };
+
+    auto drawToggle = [&g](int x, int y, bool active, const juce::String& label)
+    {
+        drawLed(g, { static_cast<float>(x), static_cast<float>(y + 6) });
+        auto toggle = juce::Rectangle<int>(x - 10, y + 18, 20, 26);
+        g.setColour(juce::Colour(0xff050505));
+        g.fillRoundedRectangle(toggle.toFloat(), 5.0f);
+        g.setGradientFill(juce::ColourGradient(active ? juce::Colour(0xff3d3529) : juce::Colour(0xff141412),
+                                               static_cast<float>(toggle.getX()), static_cast<float>(toggle.getY()),
+                                               juce::Colour(0xff070707), static_cast<float>(toggle.getX()), static_cast<float>(toggle.getBottom()), false));
+        g.fillRoundedRectangle(toggle.reduced(3).toFloat(), 4.0f);
+        g.setColour(cream);
+        g.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+        g.drawText(label, x - 34, y + 48, 68, 16, juce::Justification::centred);
+    };
+
     g.setColour(mutedCream);
     g.setFont(juce::FontOptions(25.0f, juce::Font::plain));
-    g.drawText("SYNTH", top.withTrimmedLeft(52).removeFromLeft(160), juce::Justification::centredLeft);
-    g.setColour(amber);
-    g.setFont(juce::FontOptions(16.0f, juce::Font::bold));
-    g.drawText("001   CLASSIC LEAD", top.withTrimmedLeft(290).removeFromLeft(320), juce::Justification::centredLeft);
+    g.drawText("SYNTH", top.withTrimmedLeft(52).removeFromLeft(145), juce::Justification::centredLeft);
 
+    g.setColour(mutedCream.withAlpha(0.9f));
     for (auto i = 0; i < 3; ++i)
-    {
-        auto button = juce::Rectangle<int>(top.getX() + 215 + i * 34, top.getY() + 8, 28, 32);
-        g.setGradientFill(juce::ColourGradient(panelLight, static_cast<float>(button.getX()), static_cast<float>(button.getY()),
-                                               panelDark, static_cast<float>(button.getX()), static_cast<float>(button.getBottom()), false));
-        g.fillRoundedRectangle(button.toFloat(), 3.0f);
-        g.setColour(outline.withAlpha(0.45f));
-        g.drawRoundedRectangle(button.toFloat(), 3.0f, 1.0f);
-    }
+        g.fillRect(top.getX() + 34, top.getY() + 13 + i * 8, 20, 3);
 
-    auto meter = juce::Rectangle<int>(top.getRight() - 205, top.getY() + 12, 126, 30);
+    drawHardwareButton({ top.getX() + 205, top.getY() + 8, 34, 36 }, "<");
+    drawHardwareButton({ top.getX() + 242, top.getY() + 8, 34, 36 }, ">");
+
+    auto presetDisplay = juce::Rectangle<int>(top.getX() + 286, top.getY() + 7, 320, 38);
+    g.setColour(juce::Colour(0xff080807));
+    g.fillRoundedRectangle(presetDisplay.toFloat(), 3.0f);
+    g.setColour(outline.withAlpha(0.25f));
+    g.drawRoundedRectangle(presetDisplay.toFloat(), 3.0f, 1.0f);
+    g.setColour(amber);
+    g.setFont(juce::FontOptions(18.0f, juce::Font::bold));
+    g.drawText("001   CLASSIC LEAD", presetDisplay.reduced(14, 0), juce::Justification::centredLeft);
+
+    drawHardwareButton({ top.getX() + 620, top.getY() + 8, 34, 36 }, "<");
+    drawHardwareButton({ top.getX() + 657, top.getY() + 8, 34, 36 }, ">");
+    drawHardwareButton({ top.getX() + 696, top.getY() + 8, 42, 36 }, "SAVE");
+    drawHardwareButton({ top.getX() + 778, top.getY() + 8, 72, 36 }, "A / B");
+    drawHardwareButton({ top.getX() + 856, top.getY() + 8, 72, 36 }, "COPY");
+    drawHardwareButton({ top.getX() + 934, top.getY() + 8, 72, 36 }, "UNDO");
+    drawHardwareButton({ top.getX() + 1012, top.getY() + 8, 72, 36 }, "REDO");
+    drawHardwareButton({ top.getX() + 1090, top.getY() + 8, 44, 36 }, "*");
+
+    auto meter = juce::Rectangle<int>(top.getRight() - 192, top.getY() + 10, 116, 32);
     g.setColour(juce::Colour(0xff090909));
     g.fillRoundedRectangle(meter.toFloat(), 3.0f);
-    for (auto x = 0; x < 10; ++x)
+    for (auto x = 0; x < 11; ++x)
         for (auto y = 0; y < 4; ++y)
         {
-            const auto active = x < 4 && y < 3;
+            const auto active = x < 5 && y < 3;
             g.setColour(active ? amber : juce::Colour(0xff1f241e));
-            g.fillRect(meter.getX() + 10 + x * 10, meter.getY() + 7 + y * 5, 8, 3);
+            g.fillRect(meter.getX() + 9 + x * 9, meter.getY() + 7 + y * 5, 7, 3);
         }
 
-    drawSection(g, { 50, 92, 380, 286 }, "OSCILLATORS");
-    drawSection(g, { 442, 92, 214, 286 }, "MIXER");
-    drawSection(g, { 668, 92, 300, 286 }, "FILTER");
-    drawSection(g, { 980, 92, 260, 286 }, "ENVELOPES");
-    drawSection(g, { 50, 392, 520, 150 }, "MODULATION");
-    drawSection(g, { 584, 392, 300, 150 }, "PERFORMANCE");
-    drawSection(g, { 898, 392, 342, 150 }, "OUTPUT / FX");
+    auto master = juce::Rectangle<int>(top.getRight() - 64, top.getY() + 4, 48, 48);
+    g.setColour(cream);
+    g.setFont(juce::FontOptions(8.0f, juce::Font::bold));
+    g.drawText("MASTER", master.withY(master.getY() - 5), juce::Justification::centredTop);
+    juce::Slider fauxMaster;
+    fauxMaster.setName("Master");
+    retroLookAndFeel->drawRotarySlider(g, master.getX(), master.getY() + 2, master.getWidth(), master.getHeight(), 0.72f,
+                                       juce::MathConstants<float>::pi * 1.2f, juce::MathConstants<float>::pi * 2.8f, fauxMaster);
+
+    drawSection(g, { 50, 92, 430, 330 }, "OSCILLATORS");
+    drawSection(g, { 492, 92, 230, 330 }, "MIXER");
+    drawSection(g, { 734, 92, 300, 330 }, "FILTER");
+    drawSection(g, { 1046, 92, 194, 330 }, "ENVELOPES");
+    drawSection(g, { 50, 424, 430, 170 }, "LFO");
+    drawSection(g, { 492, 424, 300, 170 }, "PERFORMANCE");
+    drawSection(g, { 804, 424, 240, 170 }, "OUTPUT / FX");
+    drawSection(g, { 1056, 424, 184, 170 }, "VOICES");
+    drawSection(g, { 50, 606, 150, 106 }, "WHEELS");
+    drawSection(g, { 212, 606, 360, 106 }, "PERFORMANCE");
+    drawSection(g, { 584, 606, 210, 106 }, "ENVELOPE");
+    drawSection(g, { 806, 606, 230, 106 }, "VOICES");
+    drawSection(g, { 1048, 606, 192, 106 }, "UNISON");
+
+    g.setColour(outline.withAlpha(0.6f));
+    g.drawLine(72.0f, 198.0f, 458.0f, 198.0f, 1.0f);
+    g.drawLine(72.0f, 304.0f, 458.0f, 304.0f, 1.0f);
+    g.drawLine(608.0f, 132.0f, 608.0f, 390.0f, 1.0f);
+    g.drawLine(1048.0f, 254.0f, 1238.0f, 254.0f, 1.0f);
+    g.drawLine(532.0f, 444.0f, 532.0f, 574.0f, 1.0f);
+    g.drawLine(832.0f, 444.0f, 832.0f, 574.0f, 1.0f);
+
+    for (auto y : { 157, 263, 369 })
+    {
+        auto badge = juce::Rectangle<int>(82, y, 28, 32);
+        g.setColour(juce::Colour(0xff1a1711));
+        g.fillRoundedRectangle(badge.toFloat(), 3.0f);
+        g.setColour(outline);
+        g.drawRoundedRectangle(badge.toFloat(), 3.0f, 1.0f);
+        g.setColour(cream);
+        g.setFont(juce::FontOptions(18.0f, juce::Font::bold));
+        g.drawText(juce::String((y - 51) / 106), badge, juce::Justification::centred);
+        drawLed(g, { 98.0f, static_cast<float>(y + 42) });
+    }
+
+    g.setColour(cream.withAlpha(0.75f));
+    g.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+    for (auto y : { 165, 271, 377 })
+    {
+        g.drawText("TUNE", 128, y - 28, 70, 16, juce::Justification::centred);
+        g.drawText("WAVE", 276, y - 28, 70, 16, juce::Justification::centred);
+        g.drawText("OCTAVE", 382, y - 28, 72, 16, juce::Justification::centred);
+        g.drawText("-2        +2", 382, y + 62, 74, 16, juce::Justification::centred);
+    }
+
+    g.setColour(cream.withAlpha(0.9f));
+    g.setFont(juce::FontOptions(11.0f, juce::Font::bold));
+    g.drawText("LP", 770, 152, 24, 16, juce::Justification::centred);
+    g.drawText("HP", 810, 152, 24, 16, juce::Justification::centred);
+    g.drawText("12 dB", 982, 152, 42, 16, juce::Justification::centred);
+    g.drawText("24 dB", 982, 174, 42, 16, juce::Justification::centred);
+    drawToggle(792, 168, true, "MODE");
+    drawToggle(1004, 168, true, "SLOPE");
+
+    drawToggle(598, 332, true, "DRIVE");
+    drawToggle(580, 506, true, "VEL>AMP");
+    drawToggle(648, 506, true, "VEL>FILTER");
+    drawToggle(716, 506, false, "AFTERTOUCH");
+
+    auto drawEnvGraph = [&g](juce::Rectangle<int> envGraph)
+    {
+        g.setColour(juce::Colour(0xff11110f));
+        g.fillRoundedRectangle(envGraph.toFloat(), 3.0f);
+        g.setColour(outline.withAlpha(0.35f));
+        for (auto i = 1; i < 8; ++i)
+            g.drawVerticalLine(envGraph.getX() + i * envGraph.getWidth() / 8, static_cast<float>(envGraph.getY()), static_cast<float>(envGraph.getBottom()));
+        for (auto i = 1; i < 4; ++i)
+            g.drawHorizontalLine(envGraph.getY() + i * envGraph.getHeight() / 4, static_cast<float>(envGraph.getX()), static_cast<float>(envGraph.getRight()));
+        juce::Path envPath;
+        envPath.startNewSubPath(static_cast<float>(envGraph.getX() + 8), static_cast<float>(envGraph.getBottom() - 16));
+        envPath.lineTo(static_cast<float>(envGraph.getX() + 54), static_cast<float>(envGraph.getY() + 18));
+        envPath.lineTo(static_cast<float>(envGraph.getX() + 98), static_cast<float>(envGraph.getY() + 18));
+        envPath.lineTo(static_cast<float>(envGraph.getRight() - 10), static_cast<float>(envGraph.getBottom() - 16));
+        g.setColour(amber);
+        g.strokePath(envPath, juce::PathStrokeType(1.7f));
+    };
+
+    auto envGraph = juce::Rectangle<int>(615, 492, 144, 70);
+    drawEnvGraph(envGraph);
+
+    auto drawWheel = [&g](juce::Rectangle<int> wheel, const juce::String& name)
+    {
+        g.setColour(juce::Colour(0xff060606));
+        g.fillRoundedRectangle(wheel.toFloat(), 4.0f);
+        g.setGradientFill(juce::ColourGradient(juce::Colour(0xff353027), static_cast<float>(wheel.getX()), static_cast<float>(wheel.getY()),
+                                               juce::Colour(0xff070707), static_cast<float>(wheel.getX()), static_cast<float>(wheel.getBottom()), false));
+        g.fillRoundedRectangle(wheel.reduced(5).toFloat(), 3.0f);
+        g.setColour(outline.withAlpha(0.45f));
+        g.drawRoundedRectangle(wheel.toFloat(), 4.0f, 1.0f);
+        g.setColour(cream);
+        g.setFont(juce::FontOptions(12.0f, juce::Font::bold));
+        g.drawText(name, wheel.withY(wheel.getY() - 20).withHeight(16), juce::Justification::centred);
+    };
+    drawWheel({ 78, 632, 34, 68 }, "PITCH");
+    drawWheel({ 138, 632, 34, 68 }, "MOD");
+
+    drawToggle(268, 656, true, "VEL>AMP");
+    drawToggle(352, 656, true, "VEL>FILTER");
+    drawToggle(436, 656, false, "AFTERTOUCH");
+    drawToggle(520, 656, true, "PORTAMENTO");
+    drawEnvGraph({ 610, 632, 150, 62 });
+    drawHardwareButton({ 830, 650, 40, 40 }, "1");
+    drawHardwareButton({ 874, 650, 40, 40 }, "2");
+    drawHardwareButton({ 918, 650, 40, 40 }, "4");
+    drawHardwareButton({ 962, 650, 40, 40 }, "8");
+
+    juce::Slider fauxUnisonA;
+    juce::Slider fauxUnisonB;
+    juce::Slider fauxUnisonC;
+    fauxUnisonA.setName("Unison");
+    fauxUnisonB.setName("Detune");
+    fauxUnisonC.setName("Spread");
+    retroLookAndFeel->drawRotarySlider(g, 1062, 640, 58, 58, 0.55f, juce::MathConstants<float>::pi * 1.2f, juce::MathConstants<float>::pi * 2.8f, fauxUnisonA);
+    retroLookAndFeel->drawRotarySlider(g, 1118, 640, 58, 58, 0.38f, juce::MathConstants<float>::pi * 1.2f, juce::MathConstants<float>::pi * 2.8f, fauxUnisonB);
+    retroLookAndFeel->drawRotarySlider(g, 1174, 640, 58, 58, 0.68f, juce::MathConstants<float>::pi * 1.2f, juce::MathConstants<float>::pi * 2.8f, fauxUnisonC);
+    g.setColour(cream);
+    g.setFont(juce::FontOptions(10.0f, juce::Font::bold));
+    g.drawText("VOICES", 1064, 626, 54, 14, juce::Justification::centred);
+    g.drawText("DETUNE", 1120, 626, 54, 14, juce::Justification::centred);
+    g.drawText("AMOUNT", 1174, 626, 58, 14, juce::Justification::centred);
+
+    drawHardwareButton({ 1080, 504, 34, 40 }, "1");
+    drawHardwareButton({ 1118, 504, 34, 40 }, "2");
+    drawHardwareButton({ 1156, 504, 34, 40 }, "4");
+    drawHardwareButton({ 1194, 504, 34, 40 }, "8");
 
     drawScrew(g, 52, 86);
     drawScrew(g, getWidth() - 52, 86);
     drawScrew(g, 52, getHeight() - 28);
     drawScrew(g, getWidth() - 52, getHeight() - 28);
 
-    drawLed(g, { 67.0f, 418.0f });
-    drawLed(g, { 586.0f, 418.0f });
-    drawLed(g, { 1212.0f, 418.0f });
+    drawLed(g, { 67.0f, 456.0f });
+    drawLed(g, { 586.0f, 456.0f });
+    drawLed(g, { 1212.0f, 456.0f });
 }
 
 void SynthAudioProcessorEditor::resized()
@@ -475,48 +643,48 @@ void SynthAudioProcessorEditor::resized()
         slider.setBounds(x - 2, y + 18, 50, 96);
     };
 
-    waveformLabel.setBounds(72, 132, 80, 18);
-    waveform.setBounds(72, 152, 132, 26);
-    place(analogDrift, analogDriftLabel, 226, 122);
-    place(pulseWidth, pulseWidthLabel, 314, 122);
-    place(driftRate, driftRateLabel, 226, 232);
-    place(osc1Tune, osc1TuneLabel, 78, 220);
-    place(osc2Tune, osc2TuneLabel, 168, 220);
-    place(osc3Tune, osc3TuneLabel, 316, 220);
+    waveformLabel.setBounds(268, 244, 82, 18);
+    waveform.setBounds(268, 264, 118, 26);
+    place(osc1Tune, osc1TuneLabel, 122, 134, 86, 94);
+    place(pulseWidth, pulseWidthLabel, 268, 134, 86, 94);
+    place(analogDrift, analogDriftLabel, 386, 134, 70, 82);
+    place(osc2Tune, osc2TuneLabel, 122, 240, 86, 94);
+    place(driftRate, driftRateLabel, 386, 240, 70, 82);
+    place(osc3Tune, osc3TuneLabel, 122, 342, 86, 82);
 
-    place(osc1Level, osc1LevelLabel, 464, 124);
-    place(osc2Level, osc2LevelLabel, 464, 226);
-    place(osc3Level, osc3LevelLabel, 552, 124);
-    place(noiseLevel, noiseLevelLabel, 552, 226);
-    place(mixerDrive, mixerDriveLabel, 506, 302);
+    place(osc1Level, osc1LevelLabel, 516, 128, 76, 82);
+    place(osc2Level, osc2LevelLabel, 516, 222, 76, 82);
+    place(osc3Level, osc3LevelLabel, 516, 316, 76, 82);
+    place(noiseLevel, noiseLevelLabel, 626, 128, 76, 82);
+    place(mixerDrive, mixerDriveLabel, 626, 274, 76, 92);
 
-    dualFilterModeLabel.setBounds(690, 132, 90, 18);
-    dualFilterMode.setBounds(690, 152, 130, 26);
-    placeBig(filterCutoff, filterCutoffLabel, 738, 182, 170, 170);
-    place(filterResonance, filterResonanceLabel, 690, 286);
-    place(filterEnvAmount, filterEnvAmountLabel, 874, 286);
-    place(filterDrive, filterDriveLabel, 874, 132);
+    dualFilterModeLabel.setBounds(760, 136, 90, 18);
+    dualFilterMode.setBounds(760, 156, 132, 26);
+    placeBig(filterCutoff, filterCutoffLabel, 794, 190, 166, 166);
+    place(filterResonance, filterResonanceLabel, 760, 308, 78, 90);
+    place(filterEnvAmount, filterEnvAmountLabel, 936, 308, 78, 90);
+    place(filterDrive, filterDriveLabel, 916, 136, 78, 90);
 
-    placeEnv(filterAttack, filterAttackLabel, 1000, 142);
-    placeEnv(filterDecay, filterDecayLabel, 1056, 142);
-    placeEnv(filterSustain, filterSustainLabel, 1112, 142);
-    placeEnv(filterRelease, filterReleaseLabel, 1168, 142);
-    placeEnv(ampAttack, ampAttackLabel, 1000, 266);
-    placeEnv(ampDecay, ampDecayLabel, 1056, 266);
-    placeEnv(ampSustain, ampSustainLabel, 1112, 266);
-    placeEnv(ampRelease, ampReleaseLabel, 1168, 266);
+    placeEnv(filterAttack, filterAttackLabel, 1064, 142);
+    placeEnv(filterDecay, filterDecayLabel, 1108, 142);
+    placeEnv(filterSustain, filterSustainLabel, 1152, 142);
+    placeEnv(filterRelease, filterReleaseLabel, 1196, 142);
+    placeEnv(ampAttack, ampAttackLabel, 1064, 274);
+    placeEnv(ampDecay, ampDecayLabel, 1108, 274);
+    placeEnv(ampSustain, ampSustainLabel, 1152, 274);
+    placeEnv(ampRelease, ampReleaseLabel, 1196, 274);
 
-    lfoDestinationLabel.setBounds(74, 428, 92, 18);
-    lfoDestination.setBounds(74, 448, 122, 26);
-    place(lfoRate, lfoRateLabel, 218, 432);
-    place(lfoDepth, lfoDepthLabel, 306, 432);
-    place(glideTime, glideTimeLabel, 412, 432);
+    lfoDestinationLabel.setBounds(74, 462, 92, 18);
+    lfoDestination.setBounds(74, 482, 122, 26);
+    place(lfoRate, lfoRateLabel, 224, 462, 82, 94);
+    place(lfoDepth, lfoDepthLabel, 320, 462, 82, 94);
+    place(glideTime, glideTimeLabel, 414, 462, 70, 86);
 
-    voiceModeLabel.setBounds(612, 432, 70, 18);
-    voiceMode.setBounds(612, 452, 118, 26);
-    place(chorusMix, chorusMixLabel, 758, 432);
+    voiceModeLabel.setBounds(512, 462, 78, 18);
+    voiceMode.setBounds(512, 482, 118, 26);
+    place(chorusMix, chorusMixLabel, 670, 462, 76, 90);
 
-    place(delayMix, delayMixLabel, 930, 432);
-    place(reverbMix, reverbMixLabel, 1028, 432);
-    place(outputGain, outputGainLabel, 1132, 424, 78, 96);
+    place(delayMix, delayMixLabel, 850, 462, 76, 90);
+    place(reverbMix, reverbMixLabel, 932, 462, 76, 90);
+    place(outputGain, outputGainLabel, 970, 462, 78, 96);
 }
