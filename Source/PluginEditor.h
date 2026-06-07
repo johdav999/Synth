@@ -12,6 +12,15 @@ public:
     void resized() override;
 
 private:
+    class EditableValueSlider final : public juce::Slider
+    {
+    public:
+        void mouseDoubleClick(const juce::MouseEvent&) override
+        {
+            showTextBox();
+        }
+    };
+
     using SliderAttachment = juce::AudioProcessorValueTreeState::SliderAttachment;
     using ComboAttachment = juce::AudioProcessorValueTreeState::ComboBoxAttachment;
 
@@ -35,36 +44,36 @@ private:
     juce::Label lfoDestinationLabel;
     juce::Label dualFilterModeLabel;
 
-    juce::Slider osc1Tune;
-    juce::Slider osc2Tune;
-    juce::Slider osc3Tune;
-    juce::Slider osc1Level;
-    juce::Slider osc2Level;
-    juce::Slider osc3Level;
-    juce::Slider noiseLevel;
-    juce::Slider pulseWidth;
-    juce::Slider mixerDrive;
-    juce::Slider analogDrift;
-    juce::Slider driftRate;
-    juce::Slider filterCutoff;
-    juce::Slider filterResonance;
-    juce::Slider filterEnvAmount;
-    juce::Slider filterDrive;
-    juce::Slider filterAttack;
-    juce::Slider filterDecay;
-    juce::Slider filterSustain;
-    juce::Slider filterRelease;
-    juce::Slider ampAttack;
-    juce::Slider ampDecay;
-    juce::Slider ampSustain;
-    juce::Slider ampRelease;
-    juce::Slider lfoRate;
-    juce::Slider lfoDepth;
-    juce::Slider glideTime;
-    juce::Slider chorusMix;
-    juce::Slider delayMix;
-    juce::Slider reverbMix;
-    juce::Slider outputGain;
+    EditableValueSlider osc1Tune;
+    EditableValueSlider osc2Tune;
+    EditableValueSlider osc3Tune;
+    EditableValueSlider osc1Level;
+    EditableValueSlider osc2Level;
+    EditableValueSlider osc3Level;
+    EditableValueSlider noiseLevel;
+    EditableValueSlider pulseWidth;
+    EditableValueSlider mixerDrive;
+    EditableValueSlider analogDrift;
+    EditableValueSlider driftRate;
+    EditableValueSlider filterCutoff;
+    EditableValueSlider filterResonance;
+    EditableValueSlider filterEnvAmount;
+    EditableValueSlider filterDrive;
+    EditableValueSlider filterAttack;
+    EditableValueSlider filterDecay;
+    EditableValueSlider filterSustain;
+    EditableValueSlider filterRelease;
+    EditableValueSlider ampAttack;
+    EditableValueSlider ampDecay;
+    EditableValueSlider ampSustain;
+    EditableValueSlider ampRelease;
+    EditableValueSlider lfoRate;
+    EditableValueSlider lfoDepth;
+    EditableValueSlider glideTime;
+    EditableValueSlider chorusMix;
+    EditableValueSlider delayMix;
+    EditableValueSlider reverbMix;
+    EditableValueSlider outputGain;
 
     juce::Label osc1TuneLabel;
     juce::Label osc2TuneLabel;
